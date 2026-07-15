@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0] - 2026-07-15 16:32:55 (GMT+5:30)
+
+### Added
+- Mongoose MongoDB database schema for AI Agents (`/backend/src/models/Agent.ts`) with custom field descriptions and validations.
+- Express CRUD routes for AI Agents (`/backend/src/routes/agents.ts`):
+  - `GET /api/agents` to list all agents sorted by date.
+  - `POST /api/agents` to create a new agent with model validations.
+  - `GET /api/agents/:id` to retrieve details of a specific agent.
+  - `PUT /api/agents/:id` to update configurations.
+  - `DELETE /api/agents/:id` to delete an agent.
+- Integrated the Agent CRUD router under the `/api/agents` middleware prefix in `backend/src/server.ts`.
+- Form-driven interactive AI Agent creation modal and cards list layout in `/frontend/src/pages/Agents.tsx`.
+- Integrated `AgentsPage` into the primary layout of `frontend/src/app/page.tsx`.
+
 ## [0.1.0] - 2026-07-14 13:33:33 (GMT+5:30)
 
 ### Added

@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB, getDBStatus } from './config/db';
 import { connectRedis, getRedisStatus } from './config/redis';
 import { HealthCheckResponse } from '@agentforge/shared';
+import agentRouter from './routes/agents';
 
 // Load environment variables
 dotenv.config();
@@ -16,6 +17,9 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 // Configure middleware
 app.use(cors());
 app.use(express.json());
+
+// Register API Routes
+app.use('/api/agents', agentRouter);
 
 // Initialize external connections
 connectDB(MONGODB_URI);

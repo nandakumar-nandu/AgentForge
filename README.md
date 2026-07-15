@@ -61,6 +61,35 @@ graph TD
     K --> L
 ```
 
+## Database Schema (Agent ER Diagram)
+
+```mermaid
+erDiagram
+    AGENT {
+        ObjectId id PK
+        string name "required, trimmed"
+        string type "enum: receptionist, testimonial, qa, custom"
+        string systemPrompt "required"
+        string model "enum: gpt-4o, claude-3-5-sonnet"
+        string status "enum: active, inactive"
+        date createdAt "default: now"
+    }
+```
+
+---
+
+## API Documentation
+
+The backend exposes a full REST API for managing AI Agents.
+
+| Method | Endpoint | Description | Request Body / Params | Response Status Codes |
+| :--- | :--- | :--- | :--- | :--- |
+| **GET** | `/api/agents` | Retrieve all agents sorted by date (descending) | None | `200 OK`, `500 Server Error` |
+| **POST** | `/api/agents` | Create a new AI Agent | `{ name, type, model, systemPrompt, status? }` | `201 Created`, `400 Bad Request`, `500 Server Error` |
+| **GET** | `/api/agents/:id` | Retrieve detailed configuration of a single agent | Path Param: `:id` (Mongoose ObjectId) | `200 OK`, `400 Invalid ID`, `404 Not Found`, `500 Server Error` |
+| **PUT** | `/api/agents/:id` | Update configuration parameters of an agent | Path Param: `:id`, JSON body of fields to update | `200 OK`, `400 Invalid/Validation Error`, `404 Not Found`, `500 Server Error` |
+| **DELETE** | `/api/agents/:id` | Delete an agent permanently | Path Param: `:id` (Mongoose ObjectId) | `200 OK`, `400 Invalid ID`, `404 Not Found`, `500 Server Error` |
+
 ---
 
 ## Setup & Installation

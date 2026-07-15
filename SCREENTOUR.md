@@ -35,13 +35,23 @@ graph LR
   - Active runner logs table.
   - Live connection widget check.
 
-### 2. Agents Directory
+### 2. Agents Directory & Creator
 * **Route**: `/` (Tab: `agents`)
-* **Purpose**: Displays card widgets of registered models. Enables users to inspect agent configurations (LLM temperature, provider bindings, system instructions).
+* **Purpose**: Manages full CRUD operations for AI Agents. Users can review currently deployed personas, monitor status, and deploy new ones.
 * **Key Components**:
-  - Provider model tags (OpenAI, Anthropic).
-  - Config parameters summaries.
-  - Play button trigger action placeholders.
+  - **Dynamic Card Grid**: Shows agent name, type badge (colored by category), operational status toggle (Active/Inactive), and LLM engine configuration indicator.
+  - **CRUD Operations Triggers**: Edit button triggers configuration edit mode, and Delete button deletes the record after confirmation.
+  - **Action buttons**: Chat and Run placeholders indicating upcoming execution capabilities.
+  - **Connection Disconnected Banner**: Automatically displays warning notices when the backend MongoDB port is unreachable, switching UI into mock-data fallbacks.
+
+### Create/Edit Agent Modal
+* **Purpose**: Interactive modal overlay allowing deployment or configuration modification of AI Agents.
+* **Key Components**:
+  - **Name Input**: Solid text input field with placeholder prompts.
+  - **Orchestrator Type Dropdown**: Choice list matching `receptionist`, `testimonial`, `qa`, and `custom` categories.
+  - **LLM Engine Dropdown**: Choice list matching `gpt-4o` and `claude-3-5-sonnet`.
+  - **Status Selection Radio Buttons**: Active/Inactive toggle options.
+  - **System Instructions Textarea**: Full-width textarea designed for multi-line instructions prompting model behaviors.
 
 ### 3. Jobs Queue Logs
 * **Route**: `/` (Tab: `jobs`)
