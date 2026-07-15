@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.3.0] - 2026-07-15 16:47:20 (GMT+5:30)
+
+### Added
+- Integrated OpenAI and Claude APIs for agent chat testing.
+- Created `/backend/src/services/llmService.ts` containing the core LLM execution, dynamic routing, cost limits, and rate limit exception catches.
+- Added `/backend/src/models/ChatMessage.ts` Mongoose schema to persist full dialogue transcripts in MongoDB.
+- Created Express endpoints in `/backend/src/routes/chat.ts` for:
+  - `POST /api/agents/:id/chat`: Query context history, dispatch LLM call, and log user + agent responses.
+  - `GET /api/agents/:id/chat`: Retrieve full message history chronologically.
+- Registered `/api/agents` chat routes inside `backend/src/server.ts`.
+- Developed `/frontend/src/pages/AgentChat.tsx` interface featuring chat bubble layouts, send controls, typing indicators, and local mock-mode overrides.
+- Integrated the interactive Chat window inside the Agents Directory.
+
 ## [0.2.0] - 2026-07-15 16:32:55 (GMT+5:30)
 
 ### Added

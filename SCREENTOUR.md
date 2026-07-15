@@ -53,6 +53,16 @@ graph LR
   - **Status Selection Radio Buttons**: Active/Inactive toggle options.
   - **System Instructions Textarea**: Full-width textarea designed for multi-line instructions prompting model behaviors.
 
+### Agent Chat Screen
+* **Route**: `/` (Tab: `agents`, sub-route: chat view)
+* **Purpose**: Interactive messaging workspace to test LLM completions and prompt behavior adjustments on the active agent.
+* **Key Components**:
+  - **Header Info**: Details the active agent name, model type, back button navigation trigger, and reload conversation history trigger.
+  - **Conversation bubbles pane**: User prompts populate on the right in blue tags, and AI outputs appear on the left in slate boxes. Includes timestamp and error badge warnings.
+  - **Simulated Banner warning**: Displays indicators when database settings fall back to simulation mode due to unconfigured keys.
+  - **Typing dots animation indicator**: Three bouncing dots indicating waiting for LLM completions.
+  - **Message prompt input**: Disabled during send cycles, coupled with send arrow button.
+
 ### 3. Jobs Queue Logs
 * **Route**: `/` (Tab: `jobs`)
 * **Purpose**: Tabulates executions managed by BullMQ queues. Focuses on system profiling, displaying processing times and token footprints.

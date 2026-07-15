@@ -78,3 +78,19 @@ Creating a new agent in AgentForge configures a persistent agent persona that ca
    - **System Instructions**: Write the base system prompt instructions that govern the LLM behavior.
 4. **Deploy**: Click **Deploy Agent**. The form sends a POST request to `/api/agents`. If successful, the modal closes and the agent card appears in the grid.
 
+### Testing Your Agent
+
+AgentForge includes an interactive playground to test configured agent behaviors before adding them to automation queues. Follow these steps:
+
+1. **Access Chat**: Navigate to the **Agents** directory tab. On the target agent's card, click the **Chat** button.
+2. **Review Header**: The screen transition loads the conversation workspace showing the Agent Name and LLM model badge (e.g. `gpt-4o` or `claude-3-5-sonnet`) in the header.
+3. **Write Prompts**: Type your inquiry in the message input field at the bottom and click **Send** (or press Enter).
+4. **Observe Response Cycle**:
+   - The user message appears instantly on the right.
+   - A typing indicator appears on the left as the system dispatches requests to `/api/agents/:id/chat`.
+   - The server queries database history, invokes the LLM completions client, logs both prompts/responses, and returns the reply.
+   - The agent message populates on the left.
+5. **Simulated Sandbox Mode**: If API keys are missing, the client flags a warning notice and returns simulated replies detailing the instructions run, allowing testing without costs.
+6. **Exit Workspace**: Click the **Back Arrow** button in the header to return to the Agents Directory list view.
+
+

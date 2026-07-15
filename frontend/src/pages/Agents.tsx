@@ -15,6 +15,7 @@ import {
   Cpu,
   HelpCircle
 } from "lucide-react";
+import AgentChat from "./AgentChat";
 
 // Local TypeScript definitions for frontend UI (matches backend model)
 export interface Agent {
@@ -68,6 +69,9 @@ export default function AgentsPage() {
   // Modal control states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingAgent, setEditingAgent] = useState<Agent | null>(null);
+
+  // Active chat state
+  const [activeAgentForChat, setActiveAgentForChat] = useState<Agent | null>(null);
 
   // Form states
   const [formName, setFormName] = useState<string>("");
@@ -238,6 +242,17 @@ export default function AgentsPage() {
     }
   };
 
+  if (activeAgentForChat) {
+    return (
+      <AgentChat
+        agentId={activeAgentForChat._id!}
+        agentName={activeAgentForChat.name}
+        model={activeAgentForChat.model}
+        onBack={() => setActiveAgentForChat(null)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
       
@@ -363,8 +378,9 @@ export default function AgentsPage() {
                 {/* Chat and Run Action Buttons (Unwired) */}
                 <div className="flex gap-2">
                   <button
-                    className="px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-not-allowed opacity-80"
-                    title="Interactive test chat interface (🚧)"
+                    onClick={() => setActiveAgentForChat(agent)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-800 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
+                    title="Interactive test chat interface"
                   >
                     Chat
                   </button>

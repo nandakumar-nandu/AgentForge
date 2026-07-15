@@ -61,6 +61,36 @@ graph TD
     K --> L
 ```
 
+---
+
+## Chat Message Flow
+
+The sequence below illustrates the communication flow during interactive agent chat testing:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant FE as Next.js Chat UI
+    participant BE as Express Router
+    participant LLM as LLM API (OpenAI/Claude)
+    participant DB as MongoDB (ChatMessage Collection)
+
+    User->>FE: Write Prompt & Click Send
+    FE->>BE: POST /api/agents/:id/chat { message }
+    BE->>DB: Query historical messages (ChatMessage.find)
+    DB-->>BE: Returns sorted message history array
+    BE->>BE: Append history & system prompts
+    BE->>LLM: Dispatch completion request (temperature/cost rules)
+    LLM-->>BE: Returns textual assistant response
+    BE->>DB: Save User prompt (ChatMessage.save)
+    BE->>DB: Save Agent reply (ChatMessage.save)
+    BE-->>FE: Return reply, userMsg, and agentMsg
+    FE->>User: Render message in chat bubbles list
+```
+
+---
+
 ## Database Schema (Agent ER Diagram)
 
 ```mermaid
