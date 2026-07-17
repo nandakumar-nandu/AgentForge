@@ -2,6 +2,7 @@ import { Worker, Job } from 'bullmq';
 import IORedis from 'ioredis';
 import AgentJob from '../models/AgentJob';
 import { chat } from '../services/llmService';
+import { getIO } from '../services/socketService';
 
 /**
  * ============================================================================
@@ -67,13 +68,35 @@ export const agentWorker = new Worker(
 
     // 3. Process each query in the batch sequentially
     for (let index = 0; index < totalCount; index++) {
+      // Fetch latest job state from DB to check for pause/cancellation mid-flight
+      let currentJob = await AgentJob.findById(jobId);
+      if (!currentJob) {
+        throw new Error(`AgentJob ${jobId} tracking document was deleted from database`);
+      }
+
+      // Check for user-driven cancellation
+      if (currentJob.status === 'failed' && currentJob.error === 'Cancelled by user') {
+        throw new Error('Cancelled by user');
+      }
+
+      // Sleep loop for paused state
+      while (currentJob.status === 'paused') {
+        console.info(`[Worker] Job ${job.id} is paused. Sleeping for 2 seconds...`);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        currentJob = await AgentJob.findById(jobId);
+        if (!currentJob) {
+          throw new Error(`AgentJob ${jobId} tracking document was deleted from database during pause`);
+        }
+        if (currentJob.status === 'failed' && currentJob.error === 'Cancelled by user') {
+          throw new Error('Cancelled by user');
+        }
+      }
+
       const queryPrompt = inputData[index];
-      
       console.info(`[Worker] Running batch item ${index + 1}/${totalCount} for Job ${job.id}`);
       
       try {
         // Direct integration with our LLM Completion service Router.
-        // We pass empty history ([]) for individual isolated batch prompts.
         const responseText = await chat(agentId, queryPrompt, []);
         results.push(responseText);
       } catch (err: any) {
@@ -91,12 +114,30 @@ export const agentWorker = new Worker(
 
       // Emit progress to BullMQ Redis watchers
       await job.updateProgress(currentProgress);
+
+      // Emit Socket.io updates to room listeners and dashboard
+      try {
+        const io = getIO();
+        io.to(`job:${jobId}`).emit('job:progress', { jobId, progress: currentProgress, results });
+        io.emit('job:progress', { jobId, progress: currentProgress, results });
+      } catch (sockErr) {
+        console.warn('[Worker] Failed to emit Socket.io progress update:', sockErr);
+      }
     }
 
     // 4. Mark job as completed successfully
     agentJob.status = 'completed';
     agentJob.completedAt = new Date();
     await agentJob.save();
+
+    // Emit Socket.io completion updates
+    try {
+      const io = getIO();
+      io.to(`job:${jobId}`).emit('job:completed', { jobId, results });
+      io.emit('job:completed', { jobId, results });
+    } catch (sockErr) {
+      console.warn('[Worker] Failed to emit Socket.io completed update:', sockErr);
+    }
 
     console.info(`[Worker] Completed processing Job ${job.id} (Agent: ${agentId})`);
     return { count: totalCount, success: true };
@@ -118,11 +159,25 @@ agentWorker.on('failed', async (job, err) => {
   if (job) {
     const { jobId } = job.data;
     try {
-      await AgentJob.findByIdAndUpdate(jobId, {
-        status: 'failed',
-        error: err.message || 'Worker execution error',
-        completedAt: new Date()
-      });
+      const updated = await AgentJob.findByIdAndUpdate(
+        jobId,
+        {
+          status: 'failed',
+          error: err.message || 'Worker execution error',
+          completedAt: new Date()
+        },
+        { new: true }
+      );
+      
+      // Emit Socket.io failure updates
+      try {
+        const io = getIO();
+        io.to(`job:${jobId}`).emit('job:failed', { jobId, error: err.message || 'Worker execution error' });
+        io.emit('job:failed', { jobId, error: err.message || 'Worker execution error' });
+      } catch (sockErr) {
+        console.warn('[Worker Event] Failed to emit Socket.io failed update:', sockErr);
+      }
+      
       console.info(`[Worker Event] Updated AgentJob ${jobId} status to failed in database.`);
     } catch (dbErr) {
       console.error('[Worker Event] Failed to update AgentJob error status in database:', dbErr);

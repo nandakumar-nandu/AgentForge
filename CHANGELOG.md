@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-07-17 14:25:00 (GMT+5:30)
+
+### Added
+- Integrated Socket.io real-time event communication channel to stream background execution state changes.
+- Implemented `/backend/src/services/socketService.ts` Socket.io manager, using dedicated rooms matching `job:${jobId}` namespaces.
+- Updated Mongoose `AgentJob` schema to support `'paused'` execution state flags.
+- Configured `/backend/src/workers/agentWorker.ts` process worker to broadcast socket notifications (`job:progress`, `job:completed`, `job:failed`) and check database states mid-flight for pause/cancel signals.
+- Added API endpoints in `/backend/src/routes/jobs.ts` for listing active/pending jobs and triggering control states (`pause`, `resume`, `cancel`, `retry`).
+- Created `/frontend/src/hooks/useJobSocket.ts` custom React socket hook to keep UI components synced.
+- Built a premium dashboard UI in `/frontend/src/pages/Jobs.tsx` featuring active progress animations, dynamic queue positions, expandable result lists, error tracking, and interactive task controls.
+
 ## [0.4.0] - 2026-07-17 14:16:00 (GMT+5:30)
 
 ### Added

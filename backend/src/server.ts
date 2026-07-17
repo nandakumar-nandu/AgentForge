@@ -1,6 +1,8 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createServer } from 'http';
+import { initSocket } from './services/socketService';
 import { connectDB, getDBStatus } from './config/db';
 import { connectRedis, getRedisStatus } from './config/redis';
 import { HealthCheckResponse } from '@agentforge/shared';
@@ -64,7 +66,13 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: 'Welcome to the AgentForge API. Use GET /health for status.' });
 });
 
+// Wrap the Express app in an HTTP Server
+const httpServer = createServer(app);
+
+// Attach Socket.io to the HTTP Server
+initSocket(httpServer);
+
 // Start the server
-app.listen(PORT, () => {
+httpServer.listen(PORT, () => {
   console.log(`AgentForge Backend server is running on port ${PORT}`);
 });

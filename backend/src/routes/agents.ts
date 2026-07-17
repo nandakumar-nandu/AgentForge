@@ -202,11 +202,15 @@ router.post('/:id/run', async (req: Request, res: Response) => {
     await agentJob.save();
 
     // Step 5: Enqueue the batch job task to the BullMQ Redis queue
-    const bullJob = await agentQueue.add('batch-job', {
-      jobId: agentJob._id.toString(),
-      agentId: id,
-      inputData: agentJob.inputData
-    });
+    const bullJob = await agentQueue.add(
+      'batch-job',
+      {
+        jobId: agentJob._id.toString(),
+        agentId: id,
+        inputData: agentJob.inputData
+      },
+      { jobId: agentJob._id.toString() }
+    );
 
     console.info(`[Router] Enqueued job ${bullJob.id} for AgentJob ${agentJob._id}`);
 

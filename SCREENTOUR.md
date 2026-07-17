@@ -63,13 +63,16 @@ graph LR
   - **Typing dots animation indicator**: Three bouncing dots indicating waiting for LLM completions.
   - **Message prompt input**: Disabled during send cycles, coupled with send arrow button.
 
-### 3. Jobs Queue Logs
+### 3. Jobs Queue Logs & Real-time Dashboard
 * **Route**: `/` (Tab: `jobs`)
-* **Purpose**: Tabulates executions managed by BullMQ queues. Focuses on system profiling, displaying processing times and token footprints.
+* **Purpose**: Displays the status and execution metrics of batch tasks in real-time, backed by Socket.io and Mongoose tracking logs.
 * **Key Components**:
-  - Worker state tag indicators (Active, Pending, Completed, Failed).
-  - Search fields matching active tasks.
-  - Processing metrics indicators.
+  - **Live Card List**: Displays separate control cards for each batch run. Active cards feature live-updating progress percentage and status badges.
+  - **Queue Position Identifier**: Dynamic badges (e.g., `Queue Position: #1`) identifying pending task index positions inside BullMQ queues.
+  - **Interactive Lifecycle Triggers**: Control keys to Pause (halts worker loops between queries), Resume (wakes up worker loops), Cancel (aborts execution and drops queue instances), or Retry (resets metrics and restarts jobs).
+  - **Expandable Completion Drawer**: Expandable footer panel exposing prompt inputs alongside corresponding text outputs for completed executions.
+  - **Error Logs**: Expandable red banners displaying failure details for interrupted tasks.
+
 
 ### 4. Prompt Templates Manager
 * **Route**: `/` (Tab: `templates`)

@@ -13,7 +13,8 @@
     "react-dom": "^18",
     "next": "14.2.35",
     "lucide-react": "^0.378.0",
-    "@agentforge/shared": "*"
+    "@agentforge/shared": "*",
+    "socket.io-client": "^4.7.5"
   },
   "devDependencies": {
     "typescript": "^5",

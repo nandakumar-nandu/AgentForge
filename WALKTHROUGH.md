@@ -126,5 +126,21 @@ AgentForge allows you to queue multiple independent prompts for an agent to proc
 5. **Fetch Batch Results**:
    Once the progress reaches `100` and the status transitions to `completed`, retrieve the final response list from the `results` array of the `/api/jobs/:jobId` response.
 
+### Monitoring Jobs
+
+AgentForge provides a real-time Jobs Queue dashboard page that streams background execution events and provides complete operational lifecycle controls over batch runs:
+
+1. **Access Dashboard**: Open the web dashboard and click on **Jobs Queue** in the sidebar. This loads the list of execution logs.
+2. **Real-time Streaming**: 
+   - **Active Tasks**: Render cards with a cyan-colored, live-animating progress bar. The bar and statistics update in real-time as the worker completes queries, using Socket.io subscriptions.
+   - **Pending Tasks**: Render cards showing their current `Queue Position` number (e.g. `Queue Position: #2`). This tells you where the task sits relative to other pending items.
+3. **Operational Controls**:
+   - **Pause**: Click the **Pause** button on a running job to freeze it. The background worker halts execution between batch items and sleeps.
+   - **Resume**: Click the **Play/Resume** button on a paused job to set it active. The sleeping background worker wakes up and continues.
+   - **Cancel**: Click the **Cancel (X)** button on pending, active, or paused tasks to terminate them. The system pulls pending items from Redis and stops running workers, marking the status as `failed` with error `"Cancelled by user"`.
+4. **Retry failed runs**: For failed or cancelled jobs, click the **Retry (Rotate arrow)** button. This resets completion stats, enqueues a fresh BullMQ task, and subscribes the client socket to the new execution room.
+5. **Inspect Expandable Results**: For completed jobs, click the **View Batch Execution Results** footer to expand a details panel showing each batch input query alongside its target LLM response.
+
+
 
 

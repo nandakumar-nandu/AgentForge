@@ -9,7 +9,7 @@ export interface IAgentJob extends Document {
   // Array of string queries to process in batch
   inputData: string[];
   // Current job queue lifecycle status
-  status: 'pending' | 'active' | 'completed' | 'failed';
+  status: 'pending' | 'active' | 'completed' | 'failed' | 'paused';
   // Array of LLM outputs corresponding to the inputData queries
   results: string[];
   // Completion progress percentage (0 - 100)
@@ -45,11 +45,11 @@ const AgentJobSchema = new Schema<IAgentJob>({
   status: {
     type: String,
     enum: {
-      values: ['pending', 'active', 'completed', 'failed'],
+      values: ['pending', 'active', 'completed', 'failed', 'paused'],
       message: '{VALUE} is not a valid status'
     },
     default: 'pending',
-    description: 'Job queue status: pending, active, completed, or failed'
+    description: 'Job queue status: pending, active, completed, failed, or paused'
   },
   results: {
     type: [String],

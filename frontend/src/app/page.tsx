@@ -1,4 +1,5 @@
 "use client";
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
 import React, { useState, useEffect } from "react";
 import {
@@ -21,6 +22,7 @@ import {
 } from "lucide-react";
 import { Agent, Job, PromptTemplate, SystemSettings, HealthCheckResponse } from "@agentforge/shared";
 import AgentsPage from "../pages/Agents";
+import JobsPage from "../pages/Jobs";
 
 // High-fidelity Mock Data matching Shared Types
 const MOCK_AGENTS: Agent[] = [
@@ -432,77 +434,7 @@ export default function DashboardPage() {
 
           {/* TAB 3: JOBS QUEUE */}
           {activeTab === "jobs" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-bold">BullMQ Job Queue</h3>
-                  <p className="text-slate-400 text-xs mt-1">Real-time status of agent executions handled by background workers.</p>
-                </div>
-                <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-blue-600/10 opacity-80 cursor-not-allowed">
-                  <Play className="w-4 h-4" /> Trigger New Job (🚧)
-                </button>
-              </div>
-
-              {/* Table of executions */}
-              <div className="bg-slate-900/30 border border-slate-800/80 rounded-xl overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left font-sans border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-800 bg-slate-900/60 text-slate-400 text-xs font-semibold uppercase tracking-wider">
-                        <th className="p-4">Job ID</th>
-                        <th className="p-4">Agent</th>
-                        <th className="p-4">Status</th>
-                        <th className="p-4">Input Prompt</th>
-                        <th className="p-4">Metrics</th>
-                        <th className="p-4">Created At</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-800/60 font-mono text-xs">
-                      {MOCK_JOBS.map((job) => {
-                        const relatedAgent = MOCK_AGENTS.find(a => a.id === job.agentId);
-                        return (
-                          <tr key={job.id} className="hover:bg-slate-900/25 transition-all text-slate-300">
-                            <td className="p-4 font-bold text-slate-100">{job.id}</td>
-                            <td className="p-4 font-sans text-slate-200">
-                              {relatedAgent?.name || job.agentId}
-                            </td>
-                            <td className="p-4">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-wide ${
-                                job.status === "completed" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" :
-                                job.status === "active" ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 animate-pulse" :
-                                job.status === "failed" ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" :
-                                "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                              }`}>
-                                {job.status}
-                              </span>
-                            </td>
-                            <td className="p-4 max-w-xs truncate font-sans text-slate-400">
-                              {job.input}
-                            </td>
-                            <td className="p-4 font-sans text-slate-400 space-y-1">
-                              {job.tokensUsed && (
-                                <div className="flex items-center gap-1 font-mono text-[10px]">
-                                  <Coins className="w-3 h-3 text-slate-500" /> {job.tokensUsed} tokens
-                                </div>
-                              )}
-                              {job.latency && (
-                                <div className="flex items-center gap-1 font-mono text-[10px]">
-                                  <Clock className="w-3 h-3 text-slate-500" /> {job.latency}ms
-                                </div>
-                              )}
-                              {!job.tokensUsed && !job.latency && <span className="text-slate-600">—</span>}
-                            </td>
-                            <td className="p-4 text-slate-500 font-sans">
-                              {new Date(job.createdAt).toLocaleTimeString()}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <JobsPage />
           )}
 
           {/* TAB 4: TEMPLATES */}

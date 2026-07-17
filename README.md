@@ -128,6 +128,37 @@ sequenceDiagram
 
 ---
 
+## Real-Time Socket.io Event Flow
+
+The diagram below charts how background execution events stream from BullMQ workers to the frontend via Socket.io:
+
+```mermaid
+graph TD
+    subgraph Backend Services
+        Worker[BullMQ Background Worker]
+        SocketServer[Socket.io Server Instance]
+        RestRouter[Express REST API]
+    end
+
+    subgraph Storage Space
+        MDB[(MongoDB)]
+    end
+
+    subgraph Client Application
+        Hook[useJobSocket Custom React Hook]
+        Dashboard[Jobs Dashboard View]
+    end
+
+    Worker -->|1. Emits job:progress, job:completed, job:failed| SocketServer
+    SocketServer -->|2. Dispatches to room 'job:jobId' & broadcast| Hook
+    Hook -->|3. Updates React state array| Dashboard
+    Dashboard -->|4. Renders live progress bars & outputs| Dashboard
+    Dashboard -->|5. Submits pause/resume/cancel/retry| RestRouter
+    RestRouter -->|6. Saves new state| MDB
+```
+
+---
+
 ## Database Schema (Agent ER Diagram)
 
 ```mermaid
