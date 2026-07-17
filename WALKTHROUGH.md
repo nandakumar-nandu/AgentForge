@@ -93,4 +93,38 @@ AgentForge includes an interactive playground to test configured agent behaviors
 5. **Simulated Sandbox Mode**: If API keys are missing, the client flags a warning notice and returns simulated replies detailing the instructions run, allowing testing without costs.
 6. **Exit Workspace**: Click the **Back Arrow** button in the header to return to the Agents Directory list view.
 
+### Running Batch Jobs
+
+AgentForge allows you to queue multiple independent prompts for an agent to process asynchronously in the background. This queue-driven pipeline relies on BullMQ and Redis to execute batch tasks without blocking active client requests:
+
+1. **Prepare Request Payload**:
+   Construct a `POST` request payload targeting `/api/agents/:id/run`. The request body must contain an array of prompt strings:
+   ```json
+   {
+     "inputData": [
+       "Explain relativity in 20 words.",
+       "What is 15 + 28?",
+       "Draft a short hello email."
+     ]
+   }
+   ```
+2. **Submit Request**:
+   Send the `POST` request. The API router validates the agent configuration, creates an `AgentJob` document in MongoDB with a `pending` status, adds the job to the BullMQ Redis queue, and immediately returns a `202 Accepted` status containing the tracking `jobId`:
+   ```json
+   {
+     "message": "Batch processing job enqueued successfully",
+     "jobId": "65f49e0f317b9b001efab1c2"
+   }
+   ```
+3. **Monitor Progress**:
+   Perform a `GET` request to `/api/jobs/:jobId` to check progress. The endpoint returns the full `AgentJob` document including `status`, `progress` (0 to 100), and partial `results` as they finish.
+4. **Worker Lifecycle execution**:
+   - The BullMQ background worker pulls the task from Redis, locking execution.
+   - It updates the database status to `active`.
+   - The worker runs the inputs through the agent's configured LLM (OpenAI or Claude) sequentially, incrementing the database and queue progress percentage.
+   - Once all inputs are processed, the status moves to `completed`, recording a completion timestamp.
+5. **Fetch Batch Results**:
+   Once the progress reaches `100` and the status transitions to `completed`, retrieve the final response list from the `results` array of the `/api/jobs/:jobId` response.
+
+
 

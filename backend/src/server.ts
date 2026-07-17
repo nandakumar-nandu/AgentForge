@@ -6,6 +6,10 @@ import { connectRedis, getRedisStatus } from './config/redis';
 import { HealthCheckResponse } from '@agentforge/shared';
 import agentRouter from './routes/agents';
 import chatRouter from './routes/chat';
+import jobsRouter from './routes/jobs';
+
+// Initialize background queue processing worker
+import './workers/agentWorker';
 
 // Load environment variables
 dotenv.config();
@@ -22,6 +26,7 @@ app.use(express.json());
 // Register API Routes
 app.use('/api/agents', agentRouter);
 app.use('/api/agents', chatRouter);
+app.use('/api/jobs', jobsRouter);
 
 // Initialize external connections
 connectDB(MONGODB_URI);

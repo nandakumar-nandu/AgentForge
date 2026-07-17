@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.0] - 2026-07-17 14:16:00 (GMT+5:30)
+
+### Added
+- Integrated BullMQ for background batch task processing for agents.
+- Implemented `/backend/src/queues/agentQueue.ts` setting up BullMQ Queue and Redis connections.
+- Implemented `/backend/src/workers/agentWorker.ts` worker to process batch query runs in the background.
+- Created `/backend/src/models/AgentJob.ts` Mongoose schema to track status, inputs, results, and progress of batch execution tasks.
+- Created `/backend/src/routes/jobs.ts` endpoint `GET /api/jobs/:id` for polling execution status and results.
+- Added `POST /api/agents/:id/run` batch trigger route to `/backend/src/routes/agents.ts`.
+- Registered job routing and background workers inside Express server initialization in `backend/src/server.ts`.
+
 ## [0.3.0] - 2026-07-15 16:47:20 (GMT+5:30)
 
 ### Added

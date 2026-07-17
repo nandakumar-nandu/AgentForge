@@ -1,5 +1,7 @@
 import { Router, Request, Response } from 'express';
 import Agent from '../models/Agent';
+import AgentJob from '../models/AgentJob';
+import { agentQueue } from '../queues/agentQueue';
 
 const router = Router();
 
@@ -159,6 +161,67 @@ router.delete('/:id', async (req: Request, res: Response) => {
     // Step 6: Handle server process failures
     console.error('Error deleting agent:', error);
     res.status(500).json({ message: 'Server error deleting agent', error: error.message });
+  }
+});
+
+/**
+ * POST /api/agents/:id/run
+ * Accepts an array of input queries in the request body, registers a batch job in MongoDB,
+ * schedules it on the BullMQ queue, and returns the jobId immediately.
+ */
+router.post('/:id/run', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { inputData } = req.body;
+
+    // Step 1: Validate inputData parameter is a non-empty array
+    if (!inputData || !Array.isArray(inputData) || inputData.length === 0) {
+      return res.status(400).json({ message: "Request body parameter 'inputData' must be a non-empty array of strings" });
+    }
+
+    // Step 2: Validate that all array items are non-empty strings
+    const allValidStrings = inputData.every(item => typeof item === 'string' && item.trim() !== "");
+    if (!allValidStrings) {
+      return res.status(400).json({ message: "All entries in 'inputData' must be non-empty strings" });
+    }
+
+    // Step 3: Check if the agent exists
+    const agent = await Agent.findById(id);
+    if (!agent) {
+      return res.status(404).json({ message: `Agent with ID ${id} not found` });
+    }
+
+    // Step 4: Create a new AgentJob log in MongoDB
+    const agentJob = new AgentJob({
+      agentId: id,
+      inputData: inputData.map(str => str.trim()),
+      status: 'pending',
+      results: [],
+      progress: 0
+    });
+    await agentJob.save();
+
+    // Step 5: Enqueue the batch job task to the BullMQ Redis queue
+    const bullJob = await agentQueue.add('batch-job', {
+      jobId: agentJob._id.toString(),
+      agentId: id,
+      inputData: agentJob.inputData
+    });
+
+    console.info(`[Router] Enqueued job ${bullJob.id} for AgentJob ${agentJob._id}`);
+
+    // Step 6: Return the jobId immediately to the client
+    res.status(202).json({
+      message: 'Batch processing job enqueued successfully',
+      jobId: agentJob._id.toString()
+    });
+
+  } catch (error: any) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid agent ID format' });
+    }
+    console.error('Error running batch agent job:', error);
+    res.status(500).json({ message: 'Server error triggering batch execution', error: error.message });
   }
 });
 

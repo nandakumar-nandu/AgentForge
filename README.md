@@ -91,6 +91,43 @@ sequenceDiagram
 
 ---
 
+## Batch Job Queue Flow
+
+The diagram below shows the asynchronous lifecycle of batch execution runs enqueued to BullMQ:
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Client as Client / REST Tester
+    participant API as Express API Router
+    participant DB as MongoDB (AgentJob Collection)
+    participant Redis as Redis (BullMQ Queue)
+    participant Worker as BullMQ Worker
+    participant LLM as LLM API (OpenAI/Claude)
+
+    Client->>API: POST /api/agents/:id/run { inputData: [...] }
+    API->>DB: Create AgentJob (status: pending, progress: 0)
+    DB-->>API: Returns AgentJob tracking doc
+    API->>Redis: Enqueue Job data (jobId, agentId, inputData)
+    API-->>Client: Return 202 Accepted { jobId } immediately
+    
+    Note over Worker, Redis: Worker fetches waiting jobs from Redis
+    Worker->>Redis: Pop batch-job
+    Worker->>DB: Update status to 'active'
+    
+    loop For each query in inputData
+        Worker->>LLM: Dispatch completion request
+        LLM-->>Worker: Return response text
+        Worker->>DB: Append result & update progress %
+        Worker->>Redis: Update job progress %
+    end
+
+    Worker->>DB: Mark status 'completed' & save completedAt
+    Worker->>Redis: Mark Job finished successfully
+```
+
+---
+
 ## Database Schema (Agent ER Diagram)
 
 ```mermaid
@@ -130,6 +167,29 @@ Make sure you have the following installed on your machine:
 * **NPM** (v9+ recommended)
 * **MongoDB** (Running on port `27017`)
 * **Redis** (Running on port `6379`)
+
+### Redis Setup & Installation
+The background batch processing feature uses BullMQ, which requires a running Redis instance to persist the job queue queues and state machines.
+
+* **Docker Option (Recommended)**:
+  Run Redis locally in a lightweight container:
+  ```bash
+  docker run --name agentforge-redis -p 6379:6379 -d redis:alpine
+  ```
+* **WSL / Linux Option**:
+  Install and start the native service in Ubuntu/Debian:
+  ```bash
+  sudo apt update && sudo apt install redis-server -y
+  sudo service redis-server start
+  ```
+* **macOS Option**:
+  Start via Homebrew:
+  ```bash
+  brew install redis
+  brew services start redis
+  ```
+* **Windows Native Option**:
+  Download and run Redis for Windows (e.g. Memurai or archive releases) and ensure `redis-server` runs on its default port `6379`.
 
 ### 1. Installation
 Clone the repository and run `npm install` in the root folder to download and link all workspace dependencies:
