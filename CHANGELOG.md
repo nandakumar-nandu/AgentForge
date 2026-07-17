@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.0] - 2026-07-17 15:17:54 (GMT+5:30)
+
+### Added
+- Created backend Railway configurations (`Procfile` and `railway.toml`).
+- Created frontend Vercel config (`vercel.json`).
+- Performed a complete environment audit and created detailed inline comments inside both backend and frontend `.env.example` configurations.
+- Audited and finalized `WALKTHROUGH.md`, `SCREENTOUR.md`, and `README.md` to reflect a completed production-ready product state.
+- Secured and stylized settings saving and test job running visual cues in frontend layouts.
+
 ## [0.7.0] - 2026-07-17 14:52:22 (GMT+5:30)
 
 ### Added

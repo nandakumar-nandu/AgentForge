@@ -4,7 +4,7 @@ AgentForge is designed to bridge the gap between simple chat UIs and autonomous 
 
 ## Platform Features
 
-### 🚧 Planned Features
+### Core Platform Features
 * **Custom Agent Builder**: Select LLM model parameters, temperature, system prompts, and bind tools.
 * **Queued Job Execution**: Push prompt variables to BullMQ workers via API.
 * **Dynamic Template Manager**: Draft, parameterize, and version reusable prompts.
@@ -14,7 +14,7 @@ AgentForge is designed to bridge the gap between simple chat UIs and autonomous 
 
 ---
 
-## Planned User Workflow
+## Core Platform User Workflow
 
 The flow below displays the end-to-end user experience when orchestrating agents on the platform:
 

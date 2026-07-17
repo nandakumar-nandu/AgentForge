@@ -159,10 +159,20 @@ graph TD
 
 ---
 
-## Database Schema (Agent ER Diagram)
+## Database Schema (Platform ER Diagram)
 
 ```mermaid
 erDiagram
+    USER {
+        ObjectId id PK
+        string username "required, unique"
+        string password "hashed"
+        string openaiKeyEncrypted "optional"
+        string openaiKeyIv "optional"
+        string claudeKeyEncrypted "optional"
+        string claudeKeyIv "optional"
+        date createdAt
+    }
     AGENT {
         ObjectId id PK
         string name "required, trimmed"
@@ -172,7 +182,39 @@ erDiagram
         string status "enum: active, inactive"
         date createdAt "default: now"
     }
+    CHATMESSAGE {
+        ObjectId id PK
+        ObjectId agentId FK
+        string sender "user|agent"
+        string content "required"
+        date timestamp
+    }
+    AGENTJOB {
+        ObjectId id PK
+        ObjectId agentId FK
+        ObjectId userId FK
+        stringArray inputData
+        string status "pending|active|completed|failed|paused"
+        stringArray results
+        number progress
+        string error "optional"
+        string webhookUrl "optional"
+        date createdAt
+        date completedAt "optional"
+    }
+    USER ||--o{ AGENTJOB : enqueues
+    AGENT ||--o{ CHATMESSAGE : has
+    AGENT ||--o{ AGENTJOB : executes
 ```
+
+---
+
+## Live Demo Deployments
+
+The platform can be accessed live using the following staging URLs:
+- **Web UI Dashboard (Vercel)**: [https://agentforge-dashboard.vercel.app](https://agentforge-dashboard.vercel.app)
+- **REST API Gateway (Railway)**: [https://agentforge-backend.up.railway.app](https://agentforge-backend.up.railway.app)
+
 
 ---
 

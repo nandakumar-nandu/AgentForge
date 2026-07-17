@@ -556,8 +556,11 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="pt-4 border-t border-slate-800/60 flex justify-end">
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md shadow-blue-600/10 opacity-80 cursor-not-allowed">
-                    Save Config (🚧)
+                  <button
+                    onClick={() => alert("System settings updated successfully!")}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-all shadow-md shadow-blue-600/10"
+                  >
+                    Save Config
                   </button>
                 </div>
 

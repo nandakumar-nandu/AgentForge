@@ -1,0 +1,11 @@
+# Railway Configuration for AgentForge Backend
+# Nixpacks is used for automated environment provisioning and builds.
+
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+# Production start execution script (runs built Javascript outputs)
+startCommand = "npm run start"
+restartPolicyType = "ON_FAILURE"
+numReplicas = 1

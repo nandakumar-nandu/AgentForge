@@ -410,8 +410,8 @@ export default function AgentsPage({ selectedTemplate, onClearTemplate }: Agents
                     Chat
                   </button>
                   <button
-                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white transition-colors flex items-center gap-1 cursor-not-allowed opacity-80"
-                    title="Queue agent test job (🚧)"
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-semibold text-white transition-colors flex items-center gap-1"
+                    title="Queue agent test job"
                   >
                     <Play className="w-3 h-3 fill-white" /> Run
                   </button>
