@@ -141,6 +141,39 @@ AgentForge provides a real-time Jobs Queue dashboard page that streams backgroun
 4. **Retry failed runs**: For failed or cancelled jobs, click the **Retry (Rotate arrow)** button. This resets completion stats, enqueues a fresh BullMQ task, and subscribes the client socket to the new execution room.
 5. **Inspect Expandable Results**: For completed jobs, click the **View Batch Execution Results** footer to expand a details panel showing each batch input query alongside its target LLM response.
 
+### Deploying from Templates
+
+AgentForge provides pre-engineered prompt personas to fast-track agent creation:
+
+1. **Access Library**: Select **Templates** in the sidebar. This lists cards for each pre-built profile (AI Receptionist, Testimonial Collector, Document Q&A).
+2. **Review Engineering Choices**: Inspect details on the target card to read the use cases and prompt engineering decisions (role specifications, response constraints, formatting rules) governing prompt construction.
+3. **Trigger Prefill Builder**: Click the **Use This Template** button.
+4. **Deploy Agent**: The screen switches to the **Agents** tab, automatically opening the **New Agent** modal with the prefilled configurations. Verify parameters and click **Deploy Agent** to finalize creation.
+
+### Triggering Callback Webhooks
+
+Batch job output results can be routed automatically to external services on completion:
+
+1. **Queue with Webhook**: When triggering a batch job via `POST /api/agents/:id/run`, supply an optional `webhookUrl` parameter in the JSON payload:
+   ```json
+   {
+     "inputData": ["Query 1", "Query 2"],
+     "webhookUrl": "https://api.yourdomain.com/callbacks/agentforge"
+   }
+   ```
+2. **Automated Notification**: Once the BullMQ worker finishes, it makes a POST request to your URL containing job status metadata and results.
+3. **Resiliency**: If your endpoint is temporarily offline, a robust retry queue handles dispatch retries with exponential backoffs (detailed in the worker logs).
+
+### Exporting Batch Results
+
+Batch outputs can be exported in structured formats for spreadsheet parsing or system imports:
+
+1. **Dashboard Downloads**: On completed job cards in the **Jobs Queue** list, click on the **JSON** or **CSV** action links.
+2. **API Endpoint Downloads**: Alternatively, execute a `GET` request to:
+   - `/api/jobs/:id/export?format=json` (for JSON file download)
+   - `/api/jobs/:id/export?format=csv` (for CSV formatted rows)
+
+
 
 
 

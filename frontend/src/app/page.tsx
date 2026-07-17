@@ -23,6 +23,7 @@ import {
 import { Agent, Job, PromptTemplate, SystemSettings, HealthCheckResponse } from "@agentforge/shared";
 import AgentsPage from "../pages/Agents";
 import JobsPage from "../pages/Jobs";
+import TemplatesPage from "../pages/Templates";
 
 // High-fidelity Mock Data matching Shared Types
 const MOCK_AGENTS: Agent[] = [
@@ -143,6 +144,14 @@ export default function DashboardPage() {
 
   // Settings State
   const [settings, setSettings] = useState<SystemSettings>(DEFAULT_SETTINGS);
+  
+  // Selected prompt template state to prefill Agent modal forms
+  const [selectedTemplate, setSelectedTemplate] = useState<{
+    name: string;
+    type: "receptionist" | "testimonial" | "qa" | "custom";
+    systemPrompt: string;
+    model?: "gpt-4o" | "claude-3-5-sonnet";
+  } | null>(null);
 
   const fetchHealth = async () => {
     setLoadingHealth(true);
@@ -429,7 +438,10 @@ export default function DashboardPage() {
 
           {/* TAB 2: AGENTS LIST */}
           {activeTab === "agents" && (
-            <AgentsPage />
+            <AgentsPage
+              selectedTemplate={selectedTemplate}
+              onClearTemplate={() => setSelectedTemplate(null)}
+            />
           )}
 
           {/* TAB 3: JOBS QUEUE */}
@@ -439,51 +451,12 @@ export default function DashboardPage() {
 
           {/* TAB 4: TEMPLATES */}
           {activeTab === "templates" && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <div>
-                  <h3 className="text-xl font-bold">Prompt Templates</h3>
-                  <p className="text-slate-400 text-xs mt-1">Reusable prompts for fast agent deployment with variable placeholders.</p>
-                </div>
-                <button className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-md shadow-blue-600/10 opacity-80 cursor-not-allowed">
-                  <Plus className="w-4 h-4" /> Add Template (🚧)
-                </button>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {MOCK_TEMPLATES.map((tpl) => (
-                  <div key={tpl.id} className="bg-slate-900/40 border border-slate-800/80 rounded-xl p-6 space-y-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-bold text-slate-200">{tpl.name}</h4>
-                        <span className="text-[10px] text-slate-500 mt-1 block">Category: {tpl.category}</span>
-                      </div>
-                      <span className="text-[10px] bg-blue-500/10 text-blue-400 px-2 py-0.5 rounded font-mono font-bold">
-                        {tpl.id}
-                      </span>
-                    </div>
-
-                    <p className="text-xs text-slate-400 leading-relaxed">{tpl.description}</p>
-
-                    <div className="space-y-2">
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Template Body</span>
-                      <pre className="bg-slate-950 p-4 border border-slate-800 rounded-lg text-[11px] font-mono text-slate-400 leading-relaxed whitespace-pre-wrap overflow-x-auto">
-                        {tpl.promptText}
-                      </pre>
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5 pt-2 items-center">
-                      <span className="text-[10px] text-slate-500 font-bold uppercase mr-1">Variables:</span>
-                      {tpl.variables.map((v, i) => (
-                        <span key={i} className="px-2 py-0.5 bg-slate-800 border border-slate-700 rounded text-[10px] font-mono text-slate-300">
-                          {"{{" + v + "}}"}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <TemplatesPage
+              onSelectTemplate={(tpl) => {
+                setSelectedTemplate(tpl);
+                setActiveTab("agents");
+              }}
+            />
           )}
 
           {/* TAB 5: SETTINGS */}

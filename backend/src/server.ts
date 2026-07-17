@@ -9,6 +9,7 @@ import { HealthCheckResponse } from '@agentforge/shared';
 import agentRouter from './routes/agents';
 import chatRouter from './routes/chat';
 import jobsRouter from './routes/jobs';
+import templatesRouter from './routes/templates';
 
 // Initialize background queue processing worker
 import './workers/agentWorker';
@@ -29,6 +30,7 @@ app.use(express.json());
 app.use('/api/agents', agentRouter);
 app.use('/api/agents', chatRouter);
 app.use('/api/jobs', jobsRouter);
+app.use('/api/templates', templatesRouter);
 
 // Initialize external connections
 connectDB(MONGODB_URI);

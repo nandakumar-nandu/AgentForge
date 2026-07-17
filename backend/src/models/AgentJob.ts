@@ -16,6 +16,8 @@ export interface IAgentJob extends Document {
   progress: number;
   // Error message if the batch processing encountered an exception
   error?: string;
+  // Optional URL to trigger completion callback notification POSTs
+  webhookUrl?: string;
   // Creation timestamp of the job
   createdAt: Date;
   // Time when job processing finished
@@ -67,6 +69,11 @@ const AgentJobSchema = new Schema<IAgentJob>({
     type: String,
     trim: true,
     description: 'Optional error description if execution fails'
+  },
+  webhookUrl: {
+    type: String,
+    trim: true,
+    description: 'Optional callback URL to notify with results upon completion'
   },
   createdAt: {
     type: Date,

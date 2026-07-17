@@ -209,4 +209,58 @@ router.post('/:id/retry', async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * GET /api/jobs/:id/export
+ * Exports the input prompts and results of a completed batch job in either JSON or CSV format.
+ */
+router.get('/:id/export', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const format = (req.query.format as string || 'json').toLowerCase();
+
+    const job = await AgentJob.findById(id);
+    if (!job) {
+      return res.status(404).json({ message: `Job with ID ${id} not found` });
+    }
+
+    if (format === 'csv') {
+      // Configure CSV download headers
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="agentforge-job-${id}.csv"`);
+
+      // Write CSV contents, formatting side-by-side queries and outputs
+      let csvContent = 'Query,Result\n';
+      const totalCount = Math.max(job.inputData.length, job.results.length);
+      for (let i = 0; i < totalCount; i++) {
+        const queryText = (job.inputData[i] || '').replace(/"/g, '""');
+        const resultText = (job.results[i] || '').replace(/"/g, '""');
+        csvContent += `"${queryText}","${resultText}"\n`;
+      }
+      return res.status(200).send(csvContent);
+    }
+
+    // Default to JSON format download
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="agentforge-job-${id}.json"`);
+    return res.status(200).json({
+      jobId: job._id.toString(),
+      agentId: job.agentId.toString(),
+      status: job.status,
+      inputData: job.inputData,
+      results: job.results,
+      progress: job.progress,
+      error: job.error,
+      createdAt: job.createdAt,
+      completedAt: job.completedAt
+    });
+
+  } catch (error: any) {
+    if (error.name === 'CastError') {
+      return res.status(400).json({ message: 'Invalid Job ID format' });
+    }
+    console.error('Error exporting job results:', error);
+    res.status(500).json({ message: 'Server error exporting job data', error: error.message });
+  }
+});
+
 export default router;

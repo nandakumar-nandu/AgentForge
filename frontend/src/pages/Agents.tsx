@@ -59,12 +59,37 @@ const FALLBACK_AGENTS: Agent[] = [
   }
 ];
 
-export default function AgentsPage() {
+export interface AgentsPageProps {
+  selectedTemplate?: {
+    name: string;
+    type: "receptionist" | "testimonial" | "qa" | "custom";
+    systemPrompt: string;
+    model?: "gpt-4o" | "claude-3-5-sonnet";
+  } | null;
+  onClearTemplate?: () => void;
+}
+
+export default function AgentsPage({ selectedTemplate, onClearTemplate }: AgentsPageProps = {}) {
   // Agent states
   const [agents, setAgents] = useState<Agent[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [usingFallbacks, setUsingFallbacks] = useState<boolean>(false);
+
+  // Prefill the agent creation form when a template is selected from templates dashboard
+  useEffect(() => {
+    if (selectedTemplate) {
+      setFormName(`My-${selectedTemplate.name}`);
+      setFormType(selectedTemplate.type);
+      setFormPrompt(selectedTemplate.systemPrompt);
+      setFormModel(selectedTemplate.model || "gpt-4o");
+      setEditingAgent(null);
+      setIsModalOpen(true);
+      if (onClearTemplate) {
+        onClearTemplate();
+      }
+    }
+  }, [selectedTemplate, onClearTemplate]);
 
   // Modal control states
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);

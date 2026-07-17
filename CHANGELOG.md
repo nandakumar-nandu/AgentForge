@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0] - 2026-07-17 14:35:00 (GMT+5:30)
+
+### Added
+- Created `/backend/src/data/templates.ts` database storing 3 pre-built prompt templates (AI Receptionist, Testimonial Collector, and Document Q&A) with comments on prompt engineering decisions.
+- Created `/backend/src/routes/templates.ts` templates route exposing `GET /api/templates`.
+- Added optional `webhookUrl` property to Mongoose schema in `/backend/src/models/AgentJob.ts`.
+- Integrated background POST request notifications in `/backend/src/workers/agentWorker.ts` to push batch run outputs to `webhookUrl` on job completion.
+- Implemented `/api/jobs/:id/export` route inside `/backend/src/routes/jobs.ts` to export results as JSON or CSV download attachment formats.
+- Developed `/frontend/src/pages/Templates.tsx` templates catalog page with a "Use This Template" form modal pre-filling action.
+- Configured `/frontend/src/pages/Agents.tsx` and `/frontend/src/app/page.tsx` parent tab managers to pre-fill the agent creation modal with template system prompts and model defaults.
+- Added CSV and JSON export download links inside completed Job Cards in `/frontend/src/pages/Jobs.tsx`.
+
 ## [0.5.0] - 2026-07-17 14:25:00 (GMT+5:30)
 
 ### Added

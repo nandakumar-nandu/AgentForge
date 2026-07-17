@@ -130,6 +130,65 @@ export const agentWorker = new Worker(
     agentJob.completedAt = new Date();
     await agentJob.save();
 
+    // Trigger webhook callback notification if configured
+    if (agentJob.webhookUrl && agentJob.webhookUrl.trim() !== "") {
+      console.info(`[Worker] Dispatching completion webhook to: ${agentJob.webhookUrl}`);
+      try {
+        const response = await fetch(agentJob.webhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'User-Agent': 'AgentForge-Webhook-Service/1.0'
+          },
+          body: JSON.stringify({
+            jobId: agentJob._id.toString(),
+            agentId: agentJob.agentId.toString(),
+            status: 'completed',
+            results: agentJob.results,
+            progress: 100,
+            completedAt: agentJob.completedAt.toISOString()
+          })
+        });
+        
+        console.info(`[Worker] Webhook dispatched. HTTP status returned: ${response.status}`);
+      } catch (webhookErr: any) {
+        console.error(`[Worker] Webhook dispatch execution failed:`, webhookErr.message);
+        
+        /**
+         * ============================================================================
+         * WEBHOOK RETRY STRATEGY & ROBUST DESIGN FOR PRODUCTION:
+         * ============================================================================
+         * 
+         * In a high-traffic production system, webhooks must be resilient to receiver
+         * offline issues, network dropouts, and server timeouts.
+         * 
+         * 1. Queue Separation:
+         *    Avoid trying to perform retries directly inside the core BullMQ Agent Worker.
+         *    If a webhook POST fails (or returns a non-2xx status), create a new job task and
+         *    enqueue it onto a dedicated 'webhook-delivery-queue'.
+         * 
+         * 2. Exponential Backoff Retries:
+         *    Configure the delivery queue with backoff settings (e.g. 5 attempts, exponential):
+         *    - Attempt 1: Wait 1 minute
+         *    - Attempt 2: Wait 5 minutes
+         *    - Attempt 3: Wait 30 minutes
+         *    - Attempt 4: Wait 2 hours
+         *    - Attempt 5: Wait 12 hours
+         * 
+         * 3. Circuit Breaker Pattern:
+         *    If a target webhookUrl consistently returns 502/503 errors over a sustained period,
+         *    temporarily trip a circuit breaker to disable sending requests to that domain
+         *    for an hour to prevent system resource starvation.
+         * 
+         * 4. Security Signatures:
+         *    Compute a HMAC SHA256 signature hash of the JSON body using a shared secret keys
+         *    passphrase and inject it in a header (e.g. 'x-agentforge-signature'). This allows
+         *    receivers to authenticate that the payload originated from our platform.
+         * ============================================================================
+         */
+      }
+    }
+
     // Emit Socket.io completion updates
     try {
       const io = getIO();

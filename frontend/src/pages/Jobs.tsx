@@ -320,6 +320,28 @@ export default function JobsPage() {
                           <RotateCcw className="w-3.5 h-3.5" />
                         </button>
                       )}
+
+                      {/* Export results buttons */}
+                      {isCompleted && (
+                        <>
+                          <a
+                            href={`${backendUrl}/api/jobs/${job.id}/export?format=json`}
+                            download
+                            className="px-2 py-1 rounded-lg bg-slate-900 text-cyan-400 hover:text-white hover:bg-cyan-500/10 transition-colors flex items-center justify-center font-mono text-[9px] font-bold"
+                            title="Export results as JSON"
+                          >
+                            JSON
+                          </a>
+                          <a
+                            href={`${backendUrl}/api/jobs/${job.id}/export?format=csv`}
+                            download
+                            className="px-2 py-1 rounded-lg bg-slate-900 text-emerald-400 hover:text-white hover:bg-emerald-500/10 transition-colors flex items-center justify-center font-mono text-[9px] font-bold"
+                            title="Export results as CSV"
+                          >
+                            CSV
+                          </a>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>

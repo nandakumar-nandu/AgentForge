@@ -76,10 +76,14 @@ graph LR
 
 ### 4. Prompt Templates Manager
 * **Route**: `/` (Tab: `templates`)
-* **Purpose**: Manages instructions fed to LLM context structures. Includes variable indicators, category metadata, and text editor components.
+* **Purpose**: Serves as a pre-built templates library, showcasing engineered prompt structures for fast agent deployments.
 * **Key Components**:
-  - Parameter variables tags.
-  - Plaintext block view components.
+  - **Template Catalog Cards**: Displays pre-built cards for AI Receptionist, Testimonial Collector, and Document Q&A.
+  - **Configuration Badges**: Detail the type categorization and target default LLM engine (`gpt-4o` or `claude-3-5-sonnet`) for each template.
+  - **Use Case Bulletins**: Summarize specific target deployment environments and project benefits.
+  - **Prompt Engineering Preview**: Scrollable text blocks showing the structured system instruction details.
+  - **Use Template Dispatcher**: A trigger button on each card that loads the pre-configured parameters into the Agents form builder and shifts view.
+
 
 ### 5. Settings Control Panel
 * **Route**: `/` (Tab: `settings`)

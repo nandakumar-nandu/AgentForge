@@ -172,7 +172,7 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.post('/:id/run', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { inputData } = req.body;
+    const { inputData, webhookUrl } = req.body;
 
     // Step 1: Validate inputData parameter is a non-empty array
     if (!inputData || !Array.isArray(inputData) || inputData.length === 0) {
@@ -195,6 +195,7 @@ router.post('/:id/run', async (req: Request, res: Response) => {
     const agentJob = new AgentJob({
       agentId: id,
       inputData: inputData.map(str => str.trim()),
+      webhookUrl: webhookUrl ? String(webhookUrl).trim() : undefined,
       status: 'pending',
       results: [],
       progress: 0
