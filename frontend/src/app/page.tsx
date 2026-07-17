@@ -25,7 +25,8 @@ import AgentsPage from "../pages/Agents";
 import JobsPage from "../pages/Jobs";
 import TemplatesPage from "../pages/Templates";
 import AnalyticsPage from "../pages/Analytics";
-import { BarChart3 } from "lucide-react";
+import PipelinesPage from "../pages/Pipelines";
+import { BarChart3, Layers } from "lucide-react";
 
 // High-fidelity Mock Data matching Shared Types
 const MOCK_AGENTS: Agent[] = [
@@ -137,7 +138,7 @@ const DEFAULT_SETTINGS: SystemSettings = {
 };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "agents" | "jobs" | "templates" | "settings" | "analytics">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "agents" | "jobs" | "templates" | "settings" | "analytics" | "pipelines">("dashboard");
   const [monthlySpend, setMonthlySpend] = useState<number>(0.00);
 
   const fetchMonthlySpend = async () => {
@@ -261,6 +262,7 @@ export default function DashboardPage() {
               { id: "agents", label: "Agents", icon: Bot },
               { id: "jobs", label: "Jobs Queue", icon: Activity },
               { id: "templates", label: "Templates", icon: FileCode2 },
+              { id: "pipelines", label: "Pipelines", icon: Layers },
               { id: "analytics", label: "Analytics", icon: BarChart3 },
               { id: "settings", label: "Settings", icon: Settings }
             ].map((item) => {
@@ -623,6 +625,11 @@ export default function DashboardPage() {
           {/* TAB 6: ANALYTICS */}
           {activeTab === "analytics" && (
             <AnalyticsPage />
+          )}
+
+          {/* TAB 7: PIPELINES */}
+          {activeTab === "pipelines" && (
+            <PipelinesPage />
           )}
 
         </div>

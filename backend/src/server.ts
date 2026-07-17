@@ -11,6 +11,7 @@ import chatRouter from './routes/chat';
 import jobsRouter from './routes/jobs';
 import templatesRouter from './routes/templates';
 import analyticsRouter from './routes/analytics';
+import pipelinesRouter from './routes/pipelines';
 import { authMiddleware } from './middleware/auth';
 import authRouter from './routes/auth';
 import { generalLimiter } from './middleware/rateLimiter';
@@ -38,6 +39,7 @@ app.use('/api/agents', authMiddleware, chatRouter);
 app.use('/api/jobs', authMiddleware, jobsRouter);
 app.use('/api/templates', authMiddleware, templatesRouter);
 app.use('/api/analytics', authMiddleware, analyticsRouter);
+app.use('/api/pipelines', authMiddleware, pipelinesRouter);
 
 // Initialize external connections
 connectDB(MONGODB_URI);

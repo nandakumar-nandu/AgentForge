@@ -2,6 +2,26 @@
 
 AgentForge is a full-stack, enterprise-ready orchestration and automation dashboard for autonomous AI agents. Powered by OpenAI and Claude LLMs, it integrates a robust Express API backend, MongoDB for data storage, and BullMQ + Redis for scalable, queue-driven asynchronous task execution.
 
+## Technology Stack & Versions
+
+- **Frontend core**: Next.js `14.2.35` | React `18` | Tailwind CSS `3.4.1`
+- **Backend core**: Express `4.19.2` | TypeScript `5.4.5` | Node.js `v18+`
+- **Database & Queue**: Mongoose / MongoDB `8.4.1` | ioredis / Redis `5.4.1` | BullMQ `5.8.1`
+- **Integrations & Visuals**: Socket.io `4.7.5` | Recharts `2.12.7` | @dnd-kit/core `6.1.0`
+
+![Next.js](https://img.shields.io/badge/Next.js-14.2.35-black?style=flat-square&logo=next.js)
+![React](https://img.shields.io/badge/React-18-blue?style=flat-square&logo=react)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.4.5-blue?style=flat-square&logo=typescript)
+![Express](https://img.shields.io/badge/Express-4.19.2-lightgrey?style=flat-square&logo=express)
+![Mongoose](https://img.shields.io/badge/Mongoose-8.4.1-red?style=flat-square&logo=mongodb)
+![Redis](https://img.shields.io/badge/Redis-5.4.1-red?style=flat-square&logo=redis)
+![BullMQ](https://img.shields.io/badge/BullMQ-5.8.1-orange?style=flat-square)
+![Socket.io](https://img.shields.io/badge/Socket.io-4.7.5-black?style=flat-square&logo=socket.io)
+![Recharts](https://img.shields.io/badge/Recharts-2.12.7-blue?style=flat-square)
+![dnd--kit](https://img.shields.io/badge/dnd--kit-6.1.0-blue?style=flat-square)
+
+---
+
 ## Monorepo Project Structure
 
 This project is organized as a workspace monorepo:
