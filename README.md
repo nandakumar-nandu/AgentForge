@@ -222,6 +222,22 @@ The background batch processing feature uses BullMQ, which requires a running Re
 * **Windows Native Option**:
   Download and run Redis for Windows (e.g. Memurai or archive releases) and ensure `redis-server` runs on its default port `6379`.
 
+---
+
+## Security & API Key Protection
+
+AgentForge implements industry-standard security practices to protect client secrets and preserve API availability:
+
+1. **Authentication (JWT)**:
+   All administrative, configuration, and execution endpoints require a valid JSON Web Token (JWT) provided in the `Authorization` header (`Bearer <token>`). Tokens are signed using a server-side `JWT_SECRET` and expire after 24 hours.
+2. **Encryption at Rest (AES-256-CBC)**:
+   To prevent token theft from database leaks, user-configured OpenAI and Claude API keys are encrypted at rest using AES-256-CBC before saving. Decryption happens dynamically in-memory during prompt execution. The cryptographic key `ENCRYPTION_KEY` is isolated in the backend environment.
+3. **Throttling & Rate Limiting**:
+   - **General Routes Limiter**: Enforces a budget of 100 requests per 15 minutes per IP to block DoS attempts.
+   - **Job Execution Limiter**: Restricts submissions to 10 batch jobs per hour per user account to prevent API abuse and runaway costs.
+
+---
+
 ### 1. Installation
 Clone the repository and run `npm install` in the root folder to download and link all workspace dependencies:
 ```bash
@@ -249,6 +265,8 @@ Configure environmental variables for both `/backend` and `/frontend`. Copies of
   PORT=5001
   MONGODB_URI=mongodb://localhost:27017/agentforge
   REDIS_URL=redis://localhost:6379
+  JWT_SECRET=your-super-secret-jwt-key
+  ENCRYPTION_KEY=f90a6e382d547f2e1a3d5b7c8e9f0c1b
   ```
 
 * **Frontend Environment (`/frontend/.env`)**:

@@ -48,7 +48,7 @@ workerConnection.on('error', (err) => {
 export const agentWorker = new Worker(
   'agent-queue',
   async (job: Job) => {
-    const { jobId, agentId, inputData } = job.data;
+    const { jobId, agentId, inputData, userId } = job.data;
     
     console.info(`[Worker] Started processing Job ${job.id} (Agent: ${agentId})`);
 
@@ -97,7 +97,7 @@ export const agentWorker = new Worker(
       
       try {
         // Direct integration with our LLM Completion service Router.
-        const responseText = await chat(agentId, queryPrompt, []);
+        const responseText = await chat(agentId, queryPrompt, [], userId);
         results.push(responseText);
       } catch (err: any) {
         console.error(`[Worker] Failed prompt processing on item ${index + 1}:`, err);

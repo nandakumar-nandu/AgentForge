@@ -173,6 +173,29 @@ Batch outputs can be exported in structured formats for spreadsheet parsing or s
    - `/api/jobs/:id/export?format=json` (for JSON file download)
    - `/api/jobs/:id/export?format=csv` (for CSV formatted rows)
 
+### Security and API Keys
+
+AgentForge incorporates comprehensive authentication, encryption, and request rate-limiting guidelines to protect resources and secrets:
+
+1. **User Authentication (JWT)**:
+   - To invoke protected API endpoints, clients must first submit credentials to `/api/auth/register` and `/api/auth/login`.
+   - On successful verification, the backend returns a signed JWT token.
+   - Include this token in all subsequent requests within the HTTP `Authorization` header as `Bearer <token>`.
+2. **Encrypted Key Management**:
+   - Save or modify your personal OpenAI and Claude API keys by sending a `PUT /api/auth/keys` request with the JSON payload:
+     ```json
+     {
+       "openaiKey": "sk-proj-...",
+       "claudeKey": "sk-ant-..."
+     }
+     ```
+   - The backend runs AES-256-CBC cipher encryption on these strings using a unique Initialization Vector (IV) and a server-side `ENCRYPTION_KEY`, writing the results to the database.
+   - When executing an agent chat or queuing a batch job, the system queries the user profile, decrypts their custom key, and runs the LLM query using their keys rather than the global environment keys.
+3. **Throttling & Abuse Prevention**:
+   - Public and dashboard endpoints are rate-limited to 100 requests per 15 minutes per IP.
+   - High-cost batch execution runs are limited to 10 jobs per hour per user account to prevent token drain and runaway expenses. If a user exceeds these counts, the endpoint responds with an HTTP `429 Too Many Requests` status.
+
+
 
 
 

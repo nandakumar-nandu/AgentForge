@@ -1,12 +1,15 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
 import Agent from '../models/Agent';
+import User from '../models/User';
+import { decrypt } from '../utils/crypto';
 
 /**
  * Client Initializations
  * 
  * OpenAI and Anthropic API clients are loaded dynamically using environmental configurations
- * declared in the backend .env file (OPENAI_API_KEY and ANTHROPIC_API_KEY).
+ * declared in the backend .env file (OPENAI_API_KEY and ANTHROPIC_API_KEY) or retrieved
+ * from the user's decrypted configuration settings in MongoDB.
  * 
  * Token Management & Cost Awareness:
  * - We specify max_tokens limits (e.g. 800) to avoid runaway loop costs.
@@ -16,18 +19,18 @@ import Agent from '../models/Agent';
  *   size throttles in production.
  */
 
-const getOpenAIClient = () => {
-  const apiKey = process.env.OPENAI_API_KEY;
+const getOpenAIClient = (customApiKey?: string) => {
+  const apiKey = customApiKey || process.env.OPENAI_API_KEY;
   if (!apiKey || apiKey.trim() === "" || apiKey.includes("your-openai-api-key")) {
-    throw new Error('Unauthorized: OpenAI API Key is missing or invalid. Add OPENAI_API_KEY in backend/.env');
+    throw new Error('Unauthorized: OpenAI API Key is missing or invalid. Add OPENAI_API_KEY in backend/.env or your user settings.');
   }
   return new OpenAI({ apiKey });
 };
 
-const getAnthropicClient = () => {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+const getAnthropicClient = (customApiKey?: string) => {
+  const apiKey = customApiKey || process.env.ANTHROPIC_API_KEY;
   if (!apiKey || apiKey.trim() === "" || apiKey.includes("your-claude-api-key")) {
-    throw new Error('Unauthorized: Claude API Key is missing or invalid. Add ANTHROPIC_API_KEY in backend/.env');
+    throw new Error('Unauthorized: Claude API Key is missing or invalid. Add ANTHROPIC_API_KEY in backend/.env or your user settings.');
   }
   return new Anthropic({ apiKey });
 };
@@ -56,13 +59,14 @@ function handleLLMError(error: any, providerName: string): never {
  * Chat Completions router.
  * Maps prompt schemas to target engines (gpt-4o or claude-3-5-sonnet).
  * 
- * Supports a graceful Simulated Fallback Response if keys are unconfigured,
- * ensuring the frontend Chat interface operates cleanly for demo reviews.
+ * Supports user-specific key decryption, falling back to system keys or mock responses
+ * if no keys are configured.
  */
 export async function chat(
   agentId: string,
   userMessage: string,
-  history: Array<{ sender: 'user' | 'agent'; content: string }>
+  history: Array<{ sender: 'user' | 'agent'; content: string }>,
+  userId?: string
 ): Promise<string> {
   // Step 1: Resolve the target agent settings
   const agent = await Agent.findById(agentId);
@@ -72,12 +76,32 @@ export async function chat(
 
   const { systemPrompt, model } = agent;
 
-  // Step 2: Check if we should run in Simulated Fallback Mode due to unconfigured keys
-  const hasOpenAIKey = process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes("your-openai");
-  const hasClaudeKey = process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes("your-claude");
+  // Step 2: Resolve user-level API Key override if authenticated and key exists
+  let customApiKey: string | undefined = undefined;
+
+  if (userId) {
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        if (model === 'gpt-4o' && user.openaiKeyEncrypted && user.openaiKeyIv) {
+          customApiKey = decrypt(user.openaiKeyEncrypted, user.openaiKeyIv);
+          console.info(`[llmService] Using decrypted custom OpenAI key for User: ${user.username}`);
+        } else if (model === 'claude-3-5-sonnet' && user.claudeKeyEncrypted && user.claudeKeyIv) {
+          customApiKey = decrypt(user.claudeKeyEncrypted, user.claudeKeyIv);
+          console.info(`[llmService] Using decrypted custom Claude key for User: ${user.username}`);
+        }
+      }
+    } catch (err: any) {
+      console.error('[llmService] Error loading user-specific API key overrides:', err.message);
+    }
+  }
+
+  // Step 3: Check if we should run in Simulated Fallback Mode due to unconfigured keys
+  const hasOpenAIKey = customApiKey || (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes("your-openai"));
+  const hasClaudeKey = customApiKey || (process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes("your-claude"));
 
   const runOpenAI = model === 'gpt-4o';
-  const isKeyConfigured = runOpenAI ? hasOpenAIKey : hasClaudeKey;
+  const isKeyConfigured = runOpenAI ? !!hasOpenAIKey : !!hasClaudeKey;
 
   if (!isKeyConfigured) {
     // Generate a mock response simulating the persona for developer demo ease
@@ -90,13 +114,13 @@ export async function chat(
 I am ${agent.name}, acting under instructions: "${systemPrompt.substring(0, 50)}...".
 I received your input: "${userMessage}".
 
-To test live responses, please configure your active keys inside backend/.env.`;
+To test live responses, please configure your active keys inside backend/.env or your settings panel.`;
   }
 
-  // Step 3: Dispatch API Requests
+  // Step 4: Dispatch API Requests
   if (runOpenAI) {
     try {
-      const openai = getOpenAIClient();
+      const openai = getOpenAIClient(customApiKey);
 
       const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
         { role: 'system', content: systemPrompt }
@@ -124,7 +148,7 @@ To test live responses, please configure your active keys inside backend/.env.`;
     }
   } else {
     try {
-      const anthropic = getAnthropicClient();
+      const anthropic = getAnthropicClient(customApiKey);
 
       const messages: Anthropic.MessageParam[] = [];
 

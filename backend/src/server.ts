@@ -10,6 +10,9 @@ import agentRouter from './routes/agents';
 import chatRouter from './routes/chat';
 import jobsRouter from './routes/jobs';
 import templatesRouter from './routes/templates';
+import { authMiddleware } from './middleware/auth';
+import authRouter from './routes/auth';
+import { generalLimiter } from './middleware/rateLimiter';
 
 // Initialize background queue processing worker
 import './workers/agentWorker';
@@ -25,12 +28,14 @@ const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379';
 // Configure middleware
 app.use(cors());
 app.use(express.json());
+app.use(generalLimiter);
 
 // Register API Routes
-app.use('/api/agents', agentRouter);
-app.use('/api/agents', chatRouter);
-app.use('/api/jobs', jobsRouter);
-app.use('/api/templates', templatesRouter);
+app.use('/api/auth', authRouter);
+app.use('/api/agents', authMiddleware, agentRouter);
+app.use('/api/agents', authMiddleware, chatRouter);
+app.use('/api/jobs', authMiddleware, jobsRouter);
+app.use('/api/templates', authMiddleware, templatesRouter);
 
 // Initialize external connections
 connectDB(MONGODB_URI);

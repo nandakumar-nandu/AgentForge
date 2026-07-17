@@ -2,6 +2,20 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.7.0] - 2026-07-17 14:52:22 (GMT+5:30)
+
+### Added
+- Integrated JWT authentication and user session control.
+- Created Mongoose `User` schema (`/backend/src/models/User.ts`) storing usernames, bcrypt-hashed passwords, and AES-256 encrypted LLM API keys.
+- Implemented `/backend/src/utils/crypto.ts` helper performing AES-256-CBC cipher encryption/decryption of keys with randomized initialization vectors (IVs).
+- Implemented auth routes in `/backend/src/routes/auth.ts` for account registration, login verification, and API key updates.
+- Created `/backend/src/middleware/auth.ts` JWT validation middleware.
+- Implemented rate limiting in `/backend/src/middleware/rateLimiter.ts` using `express-rate-limit`:
+  - Global limiter: 100 requests per 15 minutes per IP address.
+  - Job runner limiter: 10 enqueued executions per 1 hour per user.
+- Updated `backend/src/server.ts` to mount security middlewares, globally rate-limit incoming queries, register authentication routers, and secure API route prefixes.
+- Updated `backend/src/services/llmService.ts` to decrypt and utilize user-specific custom credentials from MongoDB if configured, falling back to system defaults.
+
 ## [0.6.0] - 2026-07-17 14:35:00 (GMT+5:30)
 
 ### Added

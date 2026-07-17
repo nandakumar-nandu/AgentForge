@@ -18,6 +18,8 @@ export interface IAgentJob extends Document {
   error?: string;
   // Optional URL to trigger completion callback notification POSTs
   webhookUrl?: string;
+  // Reference to the User who enqueued this batch job
+  userId?: mongoose.Types.ObjectId;
   // Creation timestamp of the job
   createdAt: Date;
   // Time when job processing finished
@@ -74,6 +76,12 @@ const AgentJobSchema = new Schema<IAgentJob>({
     type: String,
     trim: true,
     description: 'Optional callback URL to notify with results upon completion'
+  },
+  userId: {
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+    index: true,
+    description: 'Reference to the User account owner who enqueued this job'
   },
   createdAt: {
     type: Date,
