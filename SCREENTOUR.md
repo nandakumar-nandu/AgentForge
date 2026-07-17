@@ -11,16 +11,20 @@ graph LR
     Dashboard -->|Sidebar Navigation| Agents[Agents List]
     Dashboard -->|Sidebar Navigation| Jobs[BullMQ Jobs Queue]
     Dashboard -->|Sidebar Navigation| Templates[Prompt Templates]
+    Dashboard -->|Sidebar Navigation| Analytics[Analytics Dashboard]
     Dashboard -->|Sidebar Navigation| Settings[System Settings]
     
     subgraph Persistent Widgets
         Health[Backend Health Connection Status]
+        Spend[Monthly Spend Indicator]
     end
     
     Agents --> Health
     Jobs --> Health
     Templates --> Health
+    Analytics --> Health
     Settings --> Health
+    Spend --> Analytics
 ```
 
 ---
@@ -29,7 +33,7 @@ graph LR
 
 ### 1. Dashboard Overview
 * **Route**: `/` (Tab: `dashboard`)
-* **Purpose**: Serves as the central control room. Provides critical statistics (active worker logs, token billing summaries, average queue times) and list overviews of active operations.
+* **Purpose**: Serves as the central control room. Provides critical statistics (active worker logs, average queue times) and list overviews of active operations.
 * **Key Components**:
   - Global status summaries cards.
   - Active runner logs table.
@@ -41,7 +45,7 @@ graph LR
 * **Key Components**:
   - **Dynamic Card Grid**: Shows agent name, type badge (colored by category), operational status toggle (Active/Inactive), and LLM engine configuration indicator.
   - **CRUD Operations Triggers**: Edit button triggers configuration edit mode, and Delete button deletes the record after confirmation.
-  - **Action buttons**: Chat and Run placeholders indicating upcoming execution capabilities.
+  - **Action buttons**: Chat and Run placeholders indicating execution capabilities.
   - **Connection Disconnected Banner**: Automatically displays warning notices when the backend MongoDB port is unreachable, switching UI into mock-data fallbacks.
 
 ### Create/Edit Agent Modal
@@ -59,6 +63,7 @@ graph LR
 * **Key Components**:
   - **Header Info**: Details the active agent name, model type, back button navigation trigger, and reload conversation history trigger.
   - **Conversation bubbles pane**: User prompts populate on the right in blue tags, and AI outputs appear on the left in slate boxes. Includes timestamp and error badge warnings.
+  - **Token & Cost Indicators**: Small cyan metrics line displayed below the response text mapping precisely the token consumption (in/out) and estimated transaction cost for that message.
   - **Simulated Banner warning**: Displays indicators when database settings fall back to simulation mode due to unconfigured keys.
   - **Typing dots animation indicator**: Three bouncing dots indicating waiting for LLM completions.
   - **Message prompt input**: Disabled during send cycles, coupled with send arrow button.
@@ -70,7 +75,7 @@ graph LR
   - **Live Card List**: Displays separate control cards for each batch run. Active cards feature live-updating progress percentage and status badges.
   - **Queue Position Identifier**: Dynamic badges (e.g., `Queue Position: #1`) identifying pending task index positions inside BullMQ queues.
   - **Interactive Lifecycle Triggers**: Control keys to Pause (halts worker loops between queries), Resume (wakes up worker loops), Cancel (aborts execution and drops queue instances), or Retry (resets metrics and restarts jobs).
-  - **Expandable Completion Drawer**: Expandable footer panel exposing prompt inputs alongside corresponding text outputs for completed executions.
+  - **Expandable Completion Drawer**: Exposes prompt inputs alongside corresponding text outputs and token costs for completed executions.
   - **Error Logs**: Expandable red banners displaying failure details for interrupted tasks.
 
 
@@ -84,8 +89,17 @@ graph LR
   - **Prompt Engineering Preview**: Scrollable text blocks showing the structured system instruction details.
   - **Use Template Dispatcher**: A trigger button on each card that loads the pre-configured parameters into the Agents form builder and shifts view.
 
+### 5. Analytics Dashboard & Cost Telemetry
+* **Route**: `/` (Tab: `analytics`)
+* **Purpose**: Hosts comprehensive Recharts visualizations and granular token log search parameters to monitor developer spend.
+* **Key Components**:
+  - **Overview Cards Grid**: Highlights Monthly Spend (USD), Most Active Agent name, Total Jobs enqueued, and Total LLM Invocations.
+  - **Interactive Date Filters**: Allows picking start and end parameters to constrain charts data and table rows.
+  - **Token Consumption Trend (Line Chart)**: Renders a dual-axis Recharts plot mapping input vs output tokens over the last 30 days.
+  - **Cost Allocation Chart (Bar Chart)**: Renders a vertical Recharts bar graph allocating estimated spending totals to different agent configurations.
+  - **Telemetry Logs Table**: A paginated list detailing the timestamp, agent name, model provider, type of connection (chat or batch run), input/output tokens count, and final transaction cost.
 
-### 5. Settings Control Panel
+### 6. Settings Control Panel
 * **Route**: `/` (Tab: `settings`)
 * **Purpose**: Configures pipeline details, containing LLM developer key slots, Mongo and Redis ports inputs, and concurrent execution throttle settings.
 * **Key Components**:

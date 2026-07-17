@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.1.0] - 2026-07-17 15:25:18 (GMT+5:30)
+
+### Added
+- Implemented Mongoose `UsageLog` schema capturing granular per-request token consumption and estimated spend allocations.
+- Created `costService` defining central pricing matrices for `gpt-4o` and `claude-3-5-sonnet` models.
+- Integrated automated usage telemetry hook inside `llmService` to record all transactions.
+- Exposed analytical backend API routes under `/api/analytics` for dashboard figures, per-agent breakdowns, and paginated audit records.
+- Built interactive Analytics UI Dashboard using Recharts displaying daily token loads, costs per agent, and searchable logs tables.
+- Rendered real-time cost and token indicators inside agent chat bubbles to prevent developer bill shocks.
+- Placed a 60-second polling spend monitor directly into the frontend layout sidebar.
+
 ## [1.0.0] - 2026-07-17 15:17:54 (GMT+5:30)
 
 ### Added

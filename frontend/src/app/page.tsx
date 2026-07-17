@@ -24,6 +24,8 @@ import { Agent, Job, PromptTemplate, SystemSettings, HealthCheckResponse } from 
 import AgentsPage from "../pages/Agents";
 import JobsPage from "../pages/Jobs";
 import TemplatesPage from "../pages/Templates";
+import AnalyticsPage from "../pages/Analytics";
+import { BarChart3 } from "lucide-react";
 
 // High-fidelity Mock Data matching Shared Types
 const MOCK_AGENTS: Agent[] = [
@@ -135,7 +137,51 @@ const DEFAULT_SETTINGS: SystemSettings = {
 };
 
 export default function DashboardPage() {
-  const [activeTab, setActiveTab] = useState<"dashboard" | "agents" | "jobs" | "templates" | "settings">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "agents" | "jobs" | "templates" | "settings" | "analytics">("dashboard");
+  const [monthlySpend, setMonthlySpend] = useState<number>(0.00);
+
+  const fetchMonthlySpend = async () => {
+    try {
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+      const token = localStorage.getItem("token") || "";
+      const res = await fetch(`${backendUrl}/api/analytics/overview`, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMonthlySpend(data.totalSpendThisMonth || 0.00);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch monthly spend from sidebar polling.");
+    }
+  };
+
+  /**
+   * ============================================================================
+   * WHY A LIGHTWEIGHT POLLING HOOK IS PREFERRED OVER WEBSOCKETS FOR SPEND DATA:
+   * ============================================================================
+   * 
+   * 1. Low Frequency Updates:
+   *    Spend metrics accumulate slowly over time as batch executions or chat completions
+   *    occur. It is not high-frequency data requiring microsecond synchronizations.
+   * 
+   * 2. Minimal Server Overhead:
+   *    Opening a persistent TCP WebSocket channel per client creates continuous CPU and
+   *    memory overhead on backend servers. Polling via a lightweight REST HTTP GET request
+   *    every 60 seconds is incredibly cheap, stateless, and scales effortlessly.
+   * 
+   * 3. Cacheability & Simplicity:
+   *    HTTP polling requests can be cached at the database or gateway layer, whereas
+   *    websockets require keeping state channels open.
+   * ============================================================================
+   */
+  useEffect(() => {
+    fetchMonthlySpend();
+    const interval = setInterval(fetchMonthlySpend, 60000);
+    return () => clearInterval(interval);
+  }, []);
   
   // Health connection state
   const [health, setHealth] = useState<HealthCheckResponse | null>(null);
@@ -215,6 +261,7 @@ export default function DashboardPage() {
               { id: "agents", label: "Agents", icon: Bot },
               { id: "jobs", label: "Jobs Queue", icon: Activity },
               { id: "templates", label: "Templates", icon: FileCode2 },
+              { id: "analytics", label: "Analytics", icon: BarChart3 },
               { id: "settings", label: "Settings", icon: Settings }
             ].map((item) => {
               const IconComp = item.icon;
@@ -239,6 +286,11 @@ export default function DashboardPage() {
 
         {/* Sidebar Footer - Real-time System Status */}
         <div className="p-4 border-t border-slate-800 bg-slate-900/50 space-y-3">
+          {/* Monthly Spend Indicator */}
+          <div className="flex items-center justify-between text-xs p-2.5 bg-slate-950/50 border border-slate-800/80 rounded-lg">
+            <span className="text-slate-500 font-medium">Monthly Spend</span>
+            <span className="font-mono font-bold text-emerald-400">${monthlySpend.toFixed(2)}</span>
+          </div>
           <div className="flex items-center justify-between text-xs">
             <span className="text-slate-500 font-medium">Backend Health</span>
             <button
@@ -566,6 +618,11 @@ export default function DashboardPage() {
 
               </div>
             </div>
+          )}
+
+          {/* TAB 6: ANALYTICS */}
+          {activeTab === "analytics" && (
+            <AnalyticsPage />
           )}
 
         </div>

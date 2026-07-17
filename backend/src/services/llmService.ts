@@ -3,22 +3,21 @@ import Anthropic from '@anthropic-ai/sdk';
 import Agent from '../models/Agent';
 import User from '../models/User';
 import { decrypt } from '../utils/crypto';
+import { calculateCost, logUsage } from './costService';
+
+/**
+ * Interface representing the completion result return type from chat.
+ */
+export interface ChatCompletionResult {
+  reply: string;
+  inputTokens: number;
+  outputTokens: number;
+  cost: number;
+}
 
 /**
  * Client Initializations
- * 
- * OpenAI and Anthropic API clients are loaded dynamically using environmental configurations
- * declared in the backend .env file (OPENAI_API_KEY and ANTHROPIC_API_KEY) or retrieved
- * from the user's decrypted configuration settings in MongoDB.
- * 
- * Token Management & Cost Awareness:
- * - We specify max_tokens limits (e.g. 800) to avoid runaway loop costs.
- * - System prompts are injected at structural query levels (OpenAI role: system, Claude system parameter) 
- *   to ensure context efficiency and prevent instruction leakage.
- * - Conversation histories are appended sequentially to sustain context state, while maintaining
- *   size throttles in production.
  */
-
 const getOpenAIClient = (customApiKey?: string) => {
   const apiKey = customApiKey || process.env.OPENAI_API_KEY;
   if (!apiKey || apiKey.trim() === "" || apiKey.includes("your-openai-api-key")) {
@@ -59,15 +58,15 @@ function handleLLMError(error: any, providerName: string): never {
  * Chat Completions router.
  * Maps prompt schemas to target engines (gpt-4o or claude-3-5-sonnet).
  * 
- * Supports user-specific key decryption, falling back to system keys or mock responses
- * if no keys are configured.
+ * Invokes cost calculations and logs usage metrics after successful completions.
  */
 export async function chat(
   agentId: string,
   userMessage: string,
   history: Array<{ sender: 'user' | 'agent'; content: string }>,
-  userId?: string
-): Promise<string> {
+  userId?: string,
+  jobId?: string
+): Promise<ChatCompletionResult> {
   // Step 1: Resolve the target agent settings
   const agent = await Agent.findById(agentId);
   if (!agent) {
@@ -76,7 +75,7 @@ export async function chat(
 
   const { systemPrompt, model } = agent;
 
-  // Step 2: Resolve user-level API Key override if authenticated and key exists
+  // Step 2: Resolve user-level API Key override if authenticated
   let customApiKey: string | undefined = undefined;
 
   if (userId) {
@@ -85,10 +84,8 @@ export async function chat(
       if (user) {
         if (model === 'gpt-4o' && user.openaiKeyEncrypted && user.openaiKeyIv) {
           customApiKey = decrypt(user.openaiKeyEncrypted, user.openaiKeyIv);
-          console.info(`[llmService] Using decrypted custom OpenAI key for User: ${user.username}`);
         } else if (model === 'claude-3-5-sonnet' && user.claudeKeyEncrypted && user.claudeKeyIv) {
           customApiKey = decrypt(user.claudeKeyEncrypted, user.claudeKeyIv);
-          console.info(`[llmService] Using decrypted custom Claude key for User: ${user.username}`);
         }
       }
     } catch (err: any) {
@@ -96,7 +93,7 @@ export async function chat(
     }
   }
 
-  // Step 3: Check if we should run in Simulated Fallback Mode due to unconfigured keys
+  // Step 3: Check if we should run in Simulated Fallback Mode
   const hasOpenAIKey = customApiKey || (process.env.OPENAI_API_KEY && !process.env.OPENAI_API_KEY.includes("your-openai"));
   const hasClaudeKey = customApiKey || (process.env.ANTHROPIC_API_KEY && !process.env.ANTHROPIC_API_KEY.includes("your-claude"));
 
@@ -104,17 +101,28 @@ export async function chat(
   const isKeyConfigured = runOpenAI ? !!hasOpenAIKey : !!hasClaudeKey;
 
   if (!isKeyConfigured) {
-    // Generate a mock response simulating the persona for developer demo ease
     console.info(`[Simulation Mode] Generating mock response for Agent: ${agent.name} (Model: ${model})`);
     
     // Simulate thinking lag
     await new Promise((resolve) => setTimeout(resolve, 800));
 
-    return `[Simulated Response - No ${runOpenAI ? "OpenAI" : "Claude"} API Key Set]
+    const reply = `[Simulated Response - No ${runOpenAI ? "OpenAI" : "Claude"} API Key Set]
 I am ${agent.name}, acting under instructions: "${systemPrompt.substring(0, 50)}...".
 I received your input: "${userMessage}".
 
 To test live responses, please configure your active keys inside backend/.env or your settings panel.`;
+
+    // Simulated token metrics
+    const inputTokens = 85;
+    const outputTokens = 120;
+    const cost = 0.0; // Simulated costs are free
+
+    return {
+      reply,
+      inputTokens,
+      outputTokens,
+      cost
+    };
   }
 
   // Step 4: Dispatch API Requests
@@ -142,7 +150,28 @@ To test live responses, please configure your active keys inside backend/.env or
         temperature: 0.7
       });
 
-      return completion.choices[0]?.message?.content || 'No completion returned from OpenAI.';
+      const reply = completion.choices[0]?.message?.content || 'No completion returned from OpenAI.';
+      const inputTokens = completion.usage?.prompt_tokens || 0;
+      const outputTokens = completion.usage?.completion_tokens || 0;
+      const cost = calculateCost('gpt-4o', inputTokens, outputTokens);
+
+      // Auto-log to UsageLog collection in MongoDB
+      await logUsage({
+        agentId: agent._id.toString(),
+        userId: userId || '60f79b001efab00123456789', // Fallback local sandbox user
+        jobId,
+        model: 'gpt-4o',
+        inputTokens,
+        outputTokens,
+        conversationType: jobId ? 'batch' : 'chat'
+      });
+
+      return {
+        reply,
+        inputTokens,
+        outputTokens,
+        cost
+      };
     } catch (error: any) {
       return handleLLMError(error, 'OpenAI');
     }
@@ -170,10 +199,29 @@ To test live responses, please configure your active keys inside backend/.env or
       });
 
       const textBlock = response.content[0];
-      if (textBlock && textBlock.type === 'text') {
-        return textBlock.text;
-      }
-      return 'No text content returned from Claude messages client.';
+      const reply = (textBlock && textBlock.type === 'text') ? textBlock.text : 'No text content returned from Claude messages client.';
+      
+      const inputTokens = response.usage?.input_tokens || 0;
+      const outputTokens = response.usage?.output_tokens || 0;
+      const cost = calculateCost('claude-3-5-sonnet', inputTokens, outputTokens);
+
+      // Auto-log to UsageLog collection in MongoDB
+      await logUsage({
+        agentId: agent._id.toString(),
+        userId: userId || '60f79b001efab00123456789',
+        jobId,
+        model: 'claude-3-5-sonnet',
+        inputTokens,
+        outputTokens,
+        conversationType: jobId ? 'batch' : 'chat'
+      });
+
+      return {
+        reply,
+        inputTokens,
+        outputTokens,
+        cost
+      };
     } catch (error: any) {
       return handleLLMError(error, 'Claude');
     }

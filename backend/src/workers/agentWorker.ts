@@ -97,8 +97,8 @@ export const agentWorker = new Worker(
       
       try {
         // Direct integration with our LLM Completion service Router.
-        const responseText = await chat(agentId, queryPrompt, [], userId);
-        results.push(responseText);
+        const chatResult = await chat(agentId, queryPrompt, [], userId, jobId);
+        results.push(chatResult.reply);
       } catch (err: any) {
         console.error(`[Worker] Failed prompt processing on item ${index + 1}:`, err);
         results.push(`Error executing query: ${err.message || 'Unknown LLM issue'}`);

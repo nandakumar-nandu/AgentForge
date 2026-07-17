@@ -66,9 +66,9 @@ router.post('/:id/chat', authMiddleware, async (req: Request, res: Response) => 
     }));
 
     // Dispatch execution requests through LLM Service, passing user ID for decrypt override
-    let reply = "";
+    let result;
     try {
-      reply = await chat(id, message.trim(), history, userId);
+      result = await chat(id, message.trim(), history, userId);
     } catch (llmError: any) {
       console.warn("LLM API request execution failed", llmError.message);
       return res.status(502).json({ message: llmError.message || "Failed to contact LLM API provider" });
@@ -86,13 +86,16 @@ router.post('/:id/chat', authMiddleware, async (req: Request, res: Response) => 
     const agentMsg = new ChatMessage({
       agentId: id,
       sender: 'agent',
-      content: reply
+      content: result.reply
     });
     await agentMsg.save();
 
-    // Return final response and saved messages metadata
+    // Return final response and saved messages metadata along with usage statistics
     res.status(200).json({
-      reply,
+      reply: result.reply,
+      inputTokens: result.inputTokens,
+      outputTokens: result.outputTokens,
+      cost: result.cost,
       userMessage: userMsg,
       agentMessage: agentMsg
     });

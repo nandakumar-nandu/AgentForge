@@ -24,6 +24,9 @@ interface Message {
   sender: "user" | "agent";
   content: string;
   timestamp?: string;
+  inputTokens?: number;
+  outputTokens?: number;
+  cost?: number;
 }
 
 const MOCK_CONVO_FALLBACK: Message[] = [
@@ -110,7 +113,10 @@ export default function AgentChat({ agentId, agentName, model, onBack }: AgentCh
           content: `[Simulated Reply]
 I received your message: "${userText}".
 To test live completions, please set up real keys in backend/.env.`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          inputTokens: 85,
+          outputTokens: 120,
+          cost: 0.0
         };
         setMessages((prev) => [...prev, agentMsg]);
       } else {
@@ -133,7 +139,10 @@ To test live completions, please set up real keys in backend/.env.`,
           _id: data.agentMessage?._id || `msg-agent-${Date.now()}`,
           sender: "agent",
           content: data.reply,
-          timestamp: data.agentMessage?.timestamp || new Date().toISOString()
+          timestamp: data.agentMessage?.timestamp || new Date().toISOString(),
+          inputTokens: data.inputTokens,
+          outputTokens: data.outputTokens,
+          cost: data.cost
         };
         setMessages((prev) => [...prev, agentMsg]);
       }
@@ -228,6 +237,22 @@ To test live completions, please set up real keys in backend/.env.`,
                     {msg.timestamp && (
                       <span className="text-[9px] text-slate-500 block text-right mt-1.5 font-mono">
                         {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    )}
+                    {/*
+                     * ============================================================================
+                     * WHY SHOWING COST PER MESSAGE IMPROVES USER AWARENESS & PREVENTS BILL SHOCK:
+                     * ============================================================================
+                     * 
+                     * Stating the input/output tokens and cost directly below each reply keeps the
+                     * developer constantly aware of LLM usage charges in real-time. It exposes
+                     * prompt-heavy system prompts or runaway loops early, helping developers optimize
+                     * instructions and manage budgets proactively before deploying to staging/prod.
+                     * ============================================================================
+                     */}
+                    {(!isUser && msg.cost !== undefined) && (
+                      <span className="text-[9px] text-cyan-400/90 block mt-1 font-mono">
+                        Tokens: {msg.inputTokens} In / {msg.outputTokens} Out | Cost: ${msg.cost.toFixed(6)}
                       </span>
                     )}
                   </div>

@@ -218,9 +218,55 @@ The platform can be accessed live using the following staging URLs:
 
 ---
 
+## Cost Tracking Flow
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant UI as Next.js Analytics UI
+    participant API as Express API Server
+    participant DB as MongoDB (UsageLogs)
+    participant Worker as Worker / Chat Router
+    participant LLM as LLM APIs (OpenAI/Claude)
+    participant Cost as costService
+    
+    Note over Worker, LLM: During batch execution (or interactive chat)
+    Worker->>LLM: Request completion
+    LLM-->>Worker: Return text response + token usage
+    Worker->>Cost: logUsage(model, tokens, agentId, userId)
+    Cost->>Cost: calculateCost(model, tokens)
+    Cost->>DB: Save UsageLog document
+    
+    Note over UI, API: Fetching analytics dashboards
+    UI->>API: GET /api/analytics/overview
+    API->>DB: MongoDB Aggregation (Spend, Active Agent, Costs)
+    DB-->>API: Aggregate numbers
+    API-->>UI: Return overview JSON payload
+    UI->>UI: Render charts & grids via Recharts
+```
+
+---
+
+## Analytics & Cost Tracking
+
+To ensure transparency and manage API costs, AgentForge includes a request-level telemetry audit logger.
+
+### Cost Calculation Pricing Models
+Rates are configured dynamically inside the [costService.ts](file:///d:/projects/AgentForge/backend/src/services/costService.ts) and calculated per 1,000,000 tokens:
+
+| Model | Input Tokens Rate (per 1M) | Output Tokens Rate (per 1M) |
+| :--- | :--- | :--- |
+| **gpt-4o** | $5.00 | $15.00 |
+| **claude-3-5-sonnet** | $3.00 | $15.00 |
+
+### Cost Calculation Formula
+$$\text{Estimated Cost (USD)} = \frac{\text{Input Tokens} \times \text{Input Rate}}{1,000,000} + \frac{\text{Output Tokens} \times \text{Output Rate}}{1,000,000}$$
+
+---
+
 ## API Documentation
 
-The backend exposes a full REST API for managing AI Agents.
+The backend exposes a full REST API for managing AI Agents, batch queues, and usage analytics. All private routes require a valid JWT header (`Authorization: Bearer <token>`).
 
 | Method | Endpoint | Description | Request Body / Params | Response Status Codes |
 | :--- | :--- | :--- | :--- | :--- |
@@ -229,6 +275,9 @@ The backend exposes a full REST API for managing AI Agents.
 | **GET** | `/api/agents/:id` | Retrieve detailed configuration of a single agent | Path Param: `:id` (Mongoose ObjectId) | `200 OK`, `400 Invalid ID`, `404 Not Found`, `500 Server Error` |
 | **PUT** | `/api/agents/:id` | Update configuration parameters of an agent | Path Param: `:id`, JSON body of fields to update | `200 OK`, `400 Invalid/Validation Error`, `404 Not Found`, `500 Server Error` |
 | **DELETE** | `/api/agents/:id` | Delete an agent permanently | Path Param: `:id` (Mongoose ObjectId) | `200 OK`, `400 Invalid ID`, `404 Not Found`, `500 Server Error` |
+| **GET** | `/api/analytics/overview` | Fetch aggregate counts, monthly spend totals, and active agent details | None | `200 OK`, `401 Unauthorized`, `500 Server Error` |
+| **GET** | `/api/analytics/agents/:id` | Fetch per-agent 30-day token and cost distribution graphs | Path Param: `:id` | `200 OK`, `401 Unauthorized`, `404 Not Found`, `500 Server Error` |
+| **GET** | `/api/analytics/usage` | Fetch paginated raw telemetry logs with search filters | Query parameters: `page, limit, agentId, model, startDate, endDate` | `200 OK`, `401 Unauthorized`, `500 Server Error` |
 
 ---
 
