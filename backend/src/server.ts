@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import path from 'path';
 import { createServer } from 'http';
 import { initSocket } from './services/socketService';
 import { connectDB, getDBStatus } from './config/db';
@@ -72,9 +73,16 @@ app.get('/health', async (req: Request, res: Response) => {
   res.status(statusCode).json(healthResponse);
 });
 
-// Root path fallback
-app.get('/', (req: Request, res: Response) => {
-  res.json({ message: 'Welcome to the AgentForge API. Use GET /health for status.' });
+// Serve static files from the frontend's export directory
+const frontendBuildPath = path.join(__dirname, '../../frontend/out');
+app.use(express.static(frontendBuildPath));
+
+// Fallback route: serve index.html for frontend client routing
+app.get('*', (req: Request, res: Response) => {
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ message: `API endpoint ${req.path} not found` });
+  }
+  res.sendFile(path.join(frontendBuildPath, 'index.html'));
 });
 
 // Wrap the Express app in an HTTP Server
