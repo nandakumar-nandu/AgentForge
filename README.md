@@ -1,5 +1,5 @@
 <p align="left">
-  <img src="./public/logo.webp" alt="AgentForge Logo" width="800" />
+  <img src="./assets/logo.webp" alt="AgentForge Logo" width="800" />
 </p>
 
 AgentForge is a full-stack, enterprise-ready orchestration and automation dashboard for autonomous AI agents. Powered by OpenAI and Claude LLMs, it integrates a robust Express API backend, MongoDB for data storage, and BullMQ + Redis for scalable, queue-driven asynchronous task execution.
@@ -8,34 +8,42 @@ AgentForge is a full-stack, enterprise-ready orchestration and automation dashbo
   <tr>
     <td align="center" width="33%">
       <strong>Dashboard</strong><br/>
-      <img src="./public/screenshots/Dashboard.png" alt="Dashboard" />
+      <img src="./assets/screenshots/Dashboard.png" alt="Dashboard" />
     </td>
     <td align="center" width="33%">
       <strong>Agents</strong><br/>
-      <img src="./public/screenshots/Agents.png" alt="Agents" />
+      <img src="./assets/screenshots/Agents.png" alt="Agents" />
     </td>
     <td align="center" width="33%">
       <strong>Templates</strong><br/>
-      <img src="./public/screenshots/Templates.png" alt="Templates" />
+      <img src="./assets/screenshots/Templates.png" alt="Templates" />
     </td>
   </tr>
   <tr>
     <td align="center" width="33%">
       <strong>Pipelines</strong><br/>
-      <img src="./public/screenshots/Pipelines.png" alt="Pipelines" />
+      <img src="./assets/screenshots/Pipelines.png" alt="Pipelines" />
     </td>
     <td align="center" width="33%">
       <strong>Analytics</strong><br/>
-      <img src="./public/screenshots/Analytics.png" alt="Analytics" />
+      <img src="./assets/screenshots/Analytics.png" alt="Analytics" />
     </td>
     <td align="center" width="33%">
       <strong>Settings</strong><br/>
-      <img src="./public/screenshots/Settings.png" alt="Settings" />
+      <img src="./assets/screenshots/Settings.png" alt="Settings" />
     </td>
   </tr>
 </table>
 
-> 🚀 **Live Demo**: https://www.agentforge.kpebble.com
+
+---
+
+## 🚀 Live Demo Deployments
+
+> https://www.agentforge.kpebble.com
+
+---
+
 
 ---
 ## Technology Stack & Versions
@@ -55,10 +63,12 @@ AgentForge is a full-stack, enterprise-ready orchestration and automation dashbo
 
 ## Monorepo Project Structure
 
-This project is organized as a workspace monorepo:
+This project is organized as a workspace monorepo with a unified single-server serving model for deployment environments (like Hostinger):
 * **`/frontend`**: Next.js 14 Web UI built with React, TypeScript, and Tailwind CSS.
 * **`/backend`**: Express server built with TypeScript, MongoDB (via Mongoose), and Redis (via ioredis).
 * **`/shared`**: Common TypeScript schemas and interfaces shared between the frontend and backend.
+* **`/assets`**: Stores static media resources (logo banner, interface screenshots) for the project documentation.
+* **`server.js`**: Root startup entrypoint proxy routing execution directly to the compiled Express server backend.
 
 ---
 
@@ -258,16 +268,7 @@ erDiagram
     AGENT ||--o{ AGENTJOB : executes
 ```
 
----
 
-## Live Demo Deployments
-
-The platform can be accessed live using the following staging URLs:
-- **Web UI Dashboard (Vercel)**: [https://agentforge-dashboard.vercel.app](https://agentforge-dashboard.vercel.app)
-- **REST API Gateway (Railway)**: [https://agentforge-backend.up.railway.app](https://agentforge-backend.up.railway.app)
-
-
----
 
 ## Cost Tracking Flow
 
