@@ -73,16 +73,19 @@ app.get('/health', async (req: Request, res: Response) => {
   res.status(statusCode).json(healthResponse);
 });
 
-// Serve static files from the frontend's export directory
-const frontendBuildPath = path.join(__dirname, '../../frontend/out');
-app.use(express.static(frontendBuildPath));
-
-// Fallback route: serve index.html for frontend client routing
-app.get('*', (req: Request, res: Response) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ message: `API endpoint ${req.path} not found` });
-  }
-  res.sendFile(path.join(frontendBuildPath, 'index.html'));
+// Root API Status Endpoint for Hostinger Pure Backend Server
+app.get('/', (req: Request, res: Response) => {
+  res.json({
+    status: 'online',
+    service: 'AgentForge Multi-Agent AI API Backend',
+    version: '0.1.0',
+    endpoints: {
+      health: '/health',
+      auth: '/api/auth',
+      agents: '/api/agents',
+      jobs: '/api/jobs'
+    }
+  });
 });
 
 // Wrap the Express app in an HTTP Server
