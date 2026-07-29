@@ -1,0 +1,15 @@
+{
+  "buildCommand": "npm run build:shared && npm run build -w frontend",
+  "outputDirectory": "frontend/.next",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://agentforge.kpebble.com/api/$1"
+    },
+    {
+      "source": "/socket.io/(.*)",
+      "destination": "https://agentforge.kpebble.com/socket.io/$1"
+    }
+  ]
+}
