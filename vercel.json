@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://agentforge.kpebble.com/api/$1"
+      "destination": "https://agentforge-api.kpebble.com/api/$1"
     },
     {
       "source": "/socket.io/(.*)",
-      "destination": "https://agentforge.kpebble.com/socket.io/$1"
+      "destination": "https://agentforge-api.kpebble.com/socket.io/$1"
     }
   ]
 }
